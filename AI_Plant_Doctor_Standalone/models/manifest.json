@@ -1,0 +1,35 @@
+{
+  "disease": {
+    "provider": "Aarpan-Garg/plant-disease-detection",
+    "architecture": "YOLOv11 Detector + ViT Base Patch16 224",
+    "dataset": "PlantDoc (30 classes across 13 species)",
+    "status": "available",
+    "mode": "hybrid"
+  },
+  "pest": {
+    "provider": "YOLO Pest Adapter Interface",
+    "architecture": "YOLO Pest Detector",
+    "status": "demo",
+    "mode": "demo",
+    "notice": "Demo inference — replace with trained pest model for field deployment."
+  },
+  "nutrient": {
+    "provider": "Multimodal Knowledge Matrix",
+    "architecture": "Rule-Based Multimodal NPK/pH Matrix",
+    "status": "available",
+    "mode": "rule_engine",
+    "notice": "Preliminary AI assessment — confirm with soil/leaf testing."
+  },
+  "irrigation": {
+    "provider": "nithu0035/smart-irrigation-system",
+    "architecture": "Evapotranspiration & Moisture Rule Engine",
+    "status": "available",
+    "mode": "rule_engine"
+  },
+  "risk": {
+    "provider": "Agricultural Risk Engine",
+    "architecture": "Environmental Risk Threshold Evaluator",
+    "status": "available",
+    "mode": "rule_engine"
+  }
+}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Critical Wheat Vision - Live Dashboard</title>
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 2rem; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 1rem; margin-bottom: 2rem; }
+        h1 { margin: 0; font-size: 1.5rem; }
+        .card { background: #1e293b; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 2rem; }
+        .upload-area { border: 2px dashed #475569; padding: 2rem; text-align: center; border-radius: 8px; cursor: pointer; transition: border-color 0.2s; }
+        .upload-area:hover { border-color: #3b82f6; }
+        .upload-area input { display: none; }
+        button { background: #3b82f6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 1rem; }
+        button:hover { background: #2563eb; }
+        button:disabled { background: #475569; cursor: not-allowed; }
+        .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; display: none; }
+        .result-panel { background: #0f172a; padding: 1rem; border-radius: 8px; border: 1px solid #334155; }
+        h4 { margin-top: 0; color: #94a3b8; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        img { width: 100%; border-radius: 8px; margin-top: 10px; }
+        pre { background: #020617; padding: 1rem; border-radius: 8px; overflow-x: auto; color: #10b981; font-size: 0.875rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌾 Critical Wheat Vision Live</h1>
+            <span style="background: #059669; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem;">System Online</span>
+        </div>
+
+        <div class="card">
+            <form id="uploadForm">
+                <label class="upload-area" id="dropZone">
+                    <input type="file" id="imageInput" accept="image/jpeg, image/png" required>
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">📸</div>
+                    <div style="font-size: 1.1rem; font-weight: 500;">Click or drag an image here to scan</div>
+                    <div style="color: #94a3b8; font-size: 0.875rem; margin-top: 0.5rem;">Supports JPG, PNG</div>
+                </label>
+                <div style="text-align: center;">
+                    <button type="submit" id="submitBtn">Run Full Pipeline Analysis</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="results-grid" id="resultsSection">
+            <div class="result-panel">
+                <h4>Stage 1: YOLO Detection</h4>
+                <img id="annotatedImage" alt="Detection Output">
+            </div>
+            <div class="result-panel">
+                <h4>Stage 2: Crop Input & Classification</h4>
+                <img id="cropImage" alt="Cropped Region" style="max-width: 50%; margin: 0 auto; display: block;">
+                <h4 style="margin-top: 1rem;">Raw JSON Output</h4>
+                <pre id="jsonOutput"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                document.querySelector('#dropZone div:nth-child(2)').innerText = fileName;
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const resultsSection = document.getElementById('resultsSection');
+            const file = document.getElementById('imageInput').files[0];
+            
+            if (!file) return alert('Please select an image first.');
+            
+            btn.innerText = 'Processing Pipeline...';
+            btn.disabled = true;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(API_URL + '/predict/image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error('Server error');
+                const data = await response.json();
+                
+                document.getElementById('jsonOutput').innerText = JSON.stringify(data, null, 2);
+                
+                if (data.annotated_image_url) {
+                    document.getElementById('annotatedImage').src = API_URL + data.annotated_image_url;
+                }
+                
+                if (data.detections && data.detections.length > 0 && data.detections[0].crop_url) {
+                    document.getElementById('cropImage').src = API_URL + data.detections[0].crop_url;
+                    document.getElementById('cropImage').style.display = 'block';
+                } else {
+                    document.getElementById('cropImage').style.display = 'none';
+                }
+                
+                resultsSection.style.display = 'grid';
+
+            } catch (error) {
+                alert('Analysis failed: ' + error.message + '
+Make sure your backend is running on port 8000.');
+            } finally {
+                btn.innerText = 'Run Full Pipeline Analysis';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

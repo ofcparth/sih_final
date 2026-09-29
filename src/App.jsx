@@ -1,0 +1,312 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Sprout, Bell, RefreshCw, Settings, ChevronDown,
+  LayoutDashboard, ShieldAlert, Bug, Sparkles,
+  Droplets, CloudSun, AlertTriangle, History,
+  Camera, MapPin, CalendarDays, FileText,
+} from 'lucide-react';
+import OverviewTab from './components/OverviewTab';
+import DiseaseTab from './components/DiseaseTab';
+import PestTab from './components/PestTab';
+import NutrientTab from './components/NutrientTab';
+import IrrigationTab from './components/IrrigationTab';
+import WeatherTab from './components/WeatherTab';
+import AlertsTab from './components/AlertsTab';
+import AnalysisTab from './components/AnalysisTab';
+import FarmReportTab from './components/FarmReportTab';
+import LiveDashboardTab from './components/LiveDashboardTab';
+import FieldMapTab from './components/FieldMapTab';
+import { FARM_INFO, ALERTS, SENSOR_READINGS, WEATHER_CURRENT, DETECTION_HISTORY } from './data/mockData';
+import { useFieldMapStore } from './store/fieldMapStore';
+
+const TABS = [
+  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'fieldmap', label: 'Field Map', icon: MapPin },
+  { id: 'disease', label: 'Disease', icon: ShieldAlert, badge: '1', badgeType: 'critical' },
+  { id: 'pest', label: 'Pests', icon: Bug, badge: '1', badgeType: 'critical' },
+  { id: 'nutrient', label: 'Nutrients', icon: Sparkles, badge: '1', badgeType: 'warn' },
+  { id: 'irrigation', label: 'Irrigation', icon: Droplets },
+  { id: 'weather', label: 'Weather', icon: CloudSun },
+  { id: 'alerts', label: 'Alerts', icon: AlertTriangle, badge: String(ALERTS.filter(a => a.type === 'critical').length), badgeType: 'critical' },
+  { id: 'analysis', label: 'Image Analysis', icon: Camera },
+  { id: 'live', label: 'Live Stream', icon: Sparkles, badge: 'Live', badgeType: 'warn' },
+  { id: 'history', label: 'History', icon: History },
+  { id: 'report', label: 'Farm Report', icon: FileText },
+];
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [lastRefresh, setLastRefresh] = useState(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
+  const [dataTick, setDataTick] = useState(0); // Forces re-render
+  const fieldLocation = useFieldMapStore(state => state.location);
+
+  useEffect(() => {
+    // Global fetch for sensor data to populate across all tabs
+    const fetchSensors = async () => {
+      try {
+        const res = await fetch('http://localhost:8001/gsheet/latest');
+        if (res.ok) {
+          const data = await res.json();
+          let changed = false;
+          if (data.data) {
+            if (data.data.Temperature) {
+              SENSOR_READINGS.airTemp = data.data.Temperature;
+              WEATHER_CURRENT.temp = data.data.Temperature;
+              changed = true;
+            }
+            if (data.data.Humidity) {
+              SENSOR_READINGS.airHumidity = data.data.Humidity;
+              WEATHER_CURRENT.humidity = data.data.Humidity;
+              changed = true;
+            }
+            if (data.data.Average) {
+              SENSOR_READINGS.soilMoisture = data.data.Average;
+              changed = true;
+            }
+          }
+          if (changed) {
+             setLastRefresh(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
+             setDataTick(t => t + 1); // Trigger React re-render
+          }
+        }
+      } catch (e) {
+        console.error("Global sensor sync failed", e);
+      }
+    };
+    fetchSensors();
+    const interval = setInterval(fetchSensors, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const renderTab = () => {
+    switch (activeTab) {
+      case 'overview': return <OverviewTab setActiveTab={setActiveTab} />;
+      case 'fieldmap': return <FieldMapTab />;
+      case 'disease': return <DiseaseTab />;
+      case 'pest': return <PestTab />;
+      case 'nutrient': return <NutrientTab />;
+      case 'irrigation': return <IrrigationTab />;
+      case 'weather': return <WeatherTab />;
+      case 'alerts': return <AlertsTab />;
+      case 'analysis': return <AnalysisTab />;
+      case 'live': return <LiveDashboardTab />;
+      case 'history': return <HistoryTab />;
+      case 'report': return <FarmReportTab />;
+      default: return <OverviewTab setActiveTab={setActiveTab} />;
+    }
+  };
+
+  return (
+    <div className="app-wrapper">
+      {/* ── HEADER ── */}
+      <header className="site-header">
+        <div className="header-inner">
+          <div className="header-brand">
+            <div className="brand-icon">
+              <Sprout size={20} />
+            </div>
+            <div>
+              <div className="brand-name">Kisan AI</div>
+              <div className="brand-tagline">Smart Farming Assistant</div>
+            </div>
+          </div>
+
+          <div className="header-divider" />
+
+          <button className="header-farm-selector">
+            <span className="farm-dot" />
+            <MapPin size={13} />
+            <span className="truncate">{fieldLocation?.name || FARM_INFO.name}</span>
+            <ChevronDown size={13} />
+          </button>
+
+          <div className="header-spacer" />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-faint)' }}>
+            <CalendarDays size={13} />
+            <span style={{ display: 'none', whiteSpace: 'nowrap' }} className="hide-mobile">
+              {FARM_INFO.growthStage} · Day {FARM_INFO.daysAfterSowing}
+            </span>
+          </div>
+
+          <div className="header-actions">
+            <div className="connection-chip demo">
+              <span className="status-dot demo" />
+              Demo Mode
+            </div>
+
+            <button className="icon-btn" title="Refresh data">
+              <RefreshCw size={15} />
+            </button>
+
+            <button className="icon-btn" title={`${ALERTS.length} alerts`} style={{ position: 'relative' }}>
+              <Bell size={15} />
+              <span className="notif-badge">{ALERTS.filter(a => a.type === 'critical').length}</span>
+            </button>
+
+            <button className="icon-btn" title="Settings">
+              <Settings size={15} />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ── NAV TABS ── */}
+      <nav className="nav-tabs-bar" role="navigation" aria-label="Dashboard sections">
+        <div className="nav-tabs-inner">
+          {TABS.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                className={`nav-tab ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+                aria-selected={activeTab === tab.id}
+                role="tab"
+                id={`tab-${tab.id}`}
+              >
+                <Icon size={15} className="nav-tab-icon" />
+                {tab.label}
+                {tab.badge && (
+                  <span className={`nav-tab-badge ${tab.badgeType === 'warn' ? 'warn' : ''}`}>
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* ── MAIN CONTENT ── */}
+      <main className="main-content" role="main" aria-labelledby={`tab-${activeTab}`}>
+        <div className="anim-fade-up" key={activeTab}>
+          {renderTab()}
+        </div>
+      </main>
+
+      {/* ── FOOTER ── */}
+      <footer style={{
+        borderTop: '1px solid var(--border-light)',
+        background: 'var(--bg-surface)',
+        padding: '12px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '8px',
+        fontSize: '12px',
+        color: 'var(--text-faint)',
+      }}>
+        <span>Kisan AI · Smart Farming Assistant · SIH 2024</span>
+        <span>Last refreshed: {lastRefresh} · {FARM_INFO.location}</span>
+      </footer>
+    </div>
+  );
+}
+
+/* ── Inline History Tab (simple, no separate file needed) ── */
+
+function HistoryTab() {
+  const [filter, setFilter] = useState('All');
+  const types = ['All', 'Disease', 'Pest', 'Nutrient'];
+
+  const filtered = filter === 'All'
+    ? DETECTION_HISTORY
+    : DETECTION_HISTORY.filter(r => r.module === filter);
+
+  const statusColor = {
+    'Action Required': 'critical',
+    'In Progress': 'warning',
+    'Resolved': 'healthy',
+  };
+
+  const moduleColor = {
+    'Disease': 'critical',
+    'Pest': 'orange',
+    'Nutrient': 'info',
+  };
+
+  return (
+    <div>
+      <div className="page-header">
+        <div className="page-header-row">
+          <div>
+            <h1 className="page-title">Detection History</h1>
+            <p className="page-subtitle">All AI model detections and analysis records for this season</p>
+          </div>
+          <div className="pill-group">
+            {types.map(t => (
+              <button
+                key={t}
+                className={`pill-option ${filter === t ? 'active' : ''}`}
+                onClick={() => setFilter(t)}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="module-panel">
+        <div style={{ overflowX: 'auto' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Module</th>
+                <th>Detection Result</th>
+                <th>Confidence</th>
+                <th>Severity</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(row => (
+                <tr key={row.id}>
+                  <td style={{ fontFamily: 'monospace', fontSize: '12px', color: 'var(--text-muted)' }}>{row.id}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{row.date}</td>
+                  <td>
+                    <span className={`status-badge ${moduleColor[row.module] || 'neutral'}`}>
+                      <span className="status-badge-dot" />
+                      {row.module}
+                    </span>
+                  </td>
+                  <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{row.result}</td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="confidence-bar" style={{ width: '60px' }}>
+                        <div
+                          className={`confidence-fill ${row.confidence > 80 ? 'green' : row.confidence > 60 ? 'amber' : 'crit'}`}
+                          style={{ width: `${row.confidence}%` }}
+                        />
+                      </div>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--brand-text)' }}>{row.confidence}%</span>
+                    </div>
+                  </td>
+                  <td>
+                    {row.severity ? (
+                      <span className={`status-badge ${row.severity === 'High' ? 'critical' : 'warning'}`}>
+                        {row.severity}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--text-faint)', fontSize: '12px' }}>—</span>
+                    )}
+                  </td>
+                  <td>
+                    <span className={`status-badge ${statusColor[row.status] || 'neutral'}`}>
+                      <span className="status-badge-dot" />
+                      {row.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

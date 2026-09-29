@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Plant Doctor - Full Dashboard</title>
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 1rem; margin-bottom: 2rem; }
+        h1 { margin: 0; font-size: 1.5rem; color: #34d399; }
+        .grid-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; }
+        .card { background: #1e293b; padding: 2rem; border-radius: 12px; border: 1px solid #334155; }
+        .upload-area { border: 2px dashed #475569; padding: 2rem; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s; background: #0f172a; }
+        .upload-area:hover { border-color: #34d399; }
+        .upload-area input { display: none; }
+        button { background: #059669; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 1rem; width: 100%; font-size: 1rem;}
+        button:hover { background: #047857; }
+        button:disabled { background: #475569; cursor: not-allowed; }
+        
+        .results-container { display: none; }
+        .result-header { background: #064e3b; padding: 1rem; border-radius: 8px; border: 1px solid #059669; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;}
+        .result-title { font-size: 1.5rem; font-weight: bold; color: #a7f3d0; }
+        .confidence-badge { background: #059669; color: white; padding: 0.5rem 1rem; border-radius: 9999px; font-weight: bold; font-size: 1.25rem; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .info-card { background: #0f172a; padding: 1.5rem; border-radius: 8px; border: 1px solid #334155; }
+        .info-card h3 { margin-top: 0; color: #94a3b8; font-size: 0.875rem; text-transform: uppercase; }
+        .info-card p { margin: 0; color: #e2e8f0; font-size: 1.1rem; line-height: 1.5; }
+        
+        .images-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+        .img-panel { background: #0f172a; padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid #334155;}
+        .img-panel img { width: 100%; border-radius: 6px; margin-top: 0.5rem; max-height: 300px; object-fit: contain; }
+        
+        ul.advisory-list { padding-left: 1.5rem; color: #e2e8f0; line-height: 1.6; }
+        ul.advisory-list li { margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌿 AI Plant Doctor - Deep Analysis Dashboard</h1>
+        </div>
+
+        <div class="grid-layout">
+            <!-- Upload Column -->
+            <div class="card">
+                <h3 style="margin-top:0; color: #e2e8f0;">Scan New Plant</h3>
+                <form id="uploadForm">
+                    <label class="upload-area" id="dropZone">
+                        <input type="file" id="imageInput" accept="image/jpeg, image/png, image/webp" required>
+                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">📸</div>
+                        <div style="font-size: 1.1rem; font-weight: 500;">Click to upload leaf image</div>
+                    </label>
+                    <button type="submit" id="submitBtn">Run Full Deep AI Diagnostics</button>
+                </form>
+            </div>
+
+            <!-- Results Column -->
+            <div class="card results-container" id="resultsSection">
+                <div class="result-header">
+                    <div>
+                        <div style="color: #6ee7b7; font-size: 0.875rem; text-transform: uppercase;">Primary Diagnosis</div>
+                        <div class="result-title" id="resDiseaseName">Disease Name</div>
+                        <div style="margin-top:0.25rem; font-size:0.9rem; color:#cbd5e1;" id="resSeverity">Severity: Moderate</div>
+                    </div>
+                    <div class="confidence-badge" id="resConfidence">98% Accuracy</div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>🦠 Pathological Cause</h3>
+                        <p id="resCause">N/A</p>
+                    </div>
+                    <div class="info-card" style="border-color: #059669;">
+                        <h3 style="color: #10b981;">💊 Recommended Cure</h3>
+                        <p id="resCure">N/A</p>
+                    </div>
+                </div>
+
+                <div class="info-card" style="margin-bottom: 1rem;">
+                    <h3>📋 Actionable Advisory Steps</h3>
+                    <ul class="advisory-list" id="resAdvisory"></ul>
+                </div>
+
+                <h3 style="color: #94a3b8; font-size: 0.875rem; text-transform: uppercase; margin-top: 1.5rem;">Visual Explainability</h3>
+                <div class="images-grid">
+                    <div class="img-panel">
+                        <h4 style="margin: 0; color: #cbd5e1;">Leaf Bounding Box (ROI)</h4>
+                        <img id="resBboxImg" src="" alt="Bounding Box">
+                    </div>
+                    <div class="img-panel">
+                        <h4 style="margin: 0; color: #cbd5e1;">AI Attention Heatmap</h4>
+                        <img id="resHeatmapImg" src="" alt="Heatmap">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8060';
+
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                document.querySelector('#dropZone div:nth-child(2)').innerText = fileName;
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const resultsSection = document.getElementById('resultsSection');
+            const file = document.getElementById('imageInput').files[0];
+            
+            if (!file) return;
+            
+            btn.innerText = 'Extracting AI Features...';
+            btn.disabled = true;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(API_URL + '/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error('Server error');
+                const data = await response.json();
+                
+                // Populate Data
+                document.getElementById('resDiseaseName').innerText = data.primary_disease;
+                document.getElementById('resConfidence').innerText = data.confidence_pct + '% Accuracy';
+                document.getElementById('resSeverity').innerText = 'Severity: ' + data.severity;
+                document.getElementById('resCause').innerText = data.cause || 'Unknown';
+                document.getElementById('resCure').innerText = data.cure || 'Unknown';
+                
+                // Advisory List
+                const advList = document.getElementById('resAdvisory');
+                advList.innerHTML = '';
+                if(data.advisory_actions) {
+                    data.advisory_actions.forEach(action => {
+                        let li = document.createElement('li');
+                        li.innerText = action;
+                        advList.appendChild(li);
+                    });
+                }
+                
+                // Images
+                if (data.bounding_box_url) {
+                    document.getElementById('resBboxImg').src = API_URL + data.bounding_box_url;
+                }
+                if (data.heatmap_url) {
+                    document.getElementById('resHeatmapImg').src = API_URL + data.heatmap_url;
+                }
+                
+                resultsSection.style.display = 'block';
+
+            } catch (error) {
+                alert('Analysis failed: ' + error.message);
+            } finally {
+                btn.innerText = 'Run Full Deep AI Diagnostics';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
