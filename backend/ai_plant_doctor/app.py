@@ -142,6 +142,10 @@ async def fetch_latest_gsheet_data():
     return {"data": latest_row, "cached": False}
 
 
+import os
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    port = int(os.getenv("PORT", 8001))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
+

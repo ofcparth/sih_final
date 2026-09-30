@@ -381,6 +381,29 @@ cd sih_final
 
 ---
 
+## 🚂 Railway Deployment Guide
+
+This repository is pre-configured for instant deployment on [Railway](https://railway.app/).
+
+### Deploying to Railway (1-Click or CLI):
+
+#### Option A: 1-Click GitHub Repository Deployment
+1. Log in to [Railway.app](https://railway.app/).
+2. Click **New Project** -> **Deploy from GitHub repo**.
+3. Select `ofcparth/sih_final` (or `parthsharma17prs/sih_final`).
+4. Railway will automatically detect `railway.json`, `Procfile`, and `Dockerfile` to build and launch your application.
+
+#### Option B: Deploying Backend & Frontend as Separate Services on Railway
+1. **Frontend Web Dashboard Service**:
+   - Source Directory: `/`
+   - Build Command: `npm run build`
+   - Start Command: `npm run preview -- --host 0.0.0.0 --port $PORT`
+2. **FastAPI AI Plant Doctor Backend Service**:
+   - Source Directory: `/backend/ai_plant_doctor`
+   - Start Command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
+
+---
+
 ## 🛠️ Built With
 
 - **Frontend**: [React 18](https://reactjs.org/), [Vite](https://vitejs.dev/), [Zustand](https://github.com/pmndrs/zustand), [Lucide Icons](https://lucide.dev/), [Recharts](https://recharts.org/)
