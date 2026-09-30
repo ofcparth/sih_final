@@ -12,51 +12,7 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
 
 ## 🏗️ System Workflow Architectures
 
-### 1. 🌐 Web Dashboard & Features Architecture (React 18 + Vite)
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│              SMART FARMING DASHBOARD (WEB UI)                    │
-│              Built with React 18 + Vite + Zustand                │
-└───────────────────────────┬──────────────────────────────────────┘
-                            │
-       ┌────────────────────┼────────────────────┐
-       │                    │                    │
-       ▼                    ▼                    ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  FIELD MAP   │    │ LIVE METRICS │    │ AI PLANT DOC │
-│ (MapLibre)   │    │ (Telemetry)  │    │  (Vision)    │
-└──────┬───────┘    └──────┬───────┘    └──────┬───────┘
-       │                   │                   │
-       ├── Draw Polygons   ├── Soil Moisture   ├── Upload Leaf
-       ├── Lawn Mower Route├── Soil pH          ├── ONNX Inference
-       ├── Waypoint Safety ├── NPK Levels      ├── Pest Diagnosis
-       └── GeoJSON Export  └── Weather Stream  └── Spray Advisory
-       │                   │                   │
-       └───────────────────┼───────────────────┘
-                           │
-                           ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                     DECISION & REPORT TABS                       │
-│                                                                  │
-│ ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │
-│ │ WEATHER TAB  │  │ IRRIGATION   │  │ AUDIT REPORT │             │
-│ │ OpenWeather  │  │ Evapotrans-  │  │ Printable    │             │
-│ │ 5-Day Forecast  piration    │  │ Farm Summary │             │
-│ └──────────────┘  └──────────────┘  └──────────────┘             │
-└───────────────────────────┬──────────────────────────────────────┘
-                            │
-                            ▼
-                       👨‍🌾 FARMER
-```
-
-<br/>
-
----
-
-<br/>
-
-### 2. 🤖 Autonomous Edge AI Rover Workflow (Radxa Board Edge Hardware)
+### 1. 🤖 Autonomous Edge AI Rover Workflow (Radxa Board Edge Hardware)
 
 ```
                               ┌───────────────┐
@@ -92,8 +48,9 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
 │ ┌──────────────────┐  ┌──────────────────┐  ┌─────────────────┐ │
 │ │ PEST DETECTION   │  │ DISEASE          │  │ NUTRIENT        │ │
 │ │                  │  │ DETECTION        │  │ DEFICIENCY      │ │
-│ │ YOLO11n          │  │ CNN / MobileNet /│  │ Transfer        │ │
-│ │ (96.6% mAP50)    │  │ ResNet (95.4%)   │  │ Learning (94%) │ │
+│ │ YOLO / Detection │  │ CNN / Efficient  │  │ CNN / Transfer  │ │
+│ │ Model            │  │ Net / ResNet     │  │ Learning /      │ │
+│ │                  │  │                  │  │ BioTrove-CLIP*  │ │
 │ └────────┬─────────┘  └────────┬─────────┘  └────────┬────────┘ │
 │          │                     │                     │          │
 │ ┌────────▼─────────┐  ┌────────▼──────────┐                     │
@@ -140,6 +97,61 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
 │  Crop Health │ Pest │ Disease │ Nutrient │ Irrigation            │
 │  Temperature │ Humidity │ Soil Moisture │ Rainfall               │
 │  Environmental Risk │ GPS Map │ Explainable AI │ Recommendations │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+                       👨‍🌾 FARMER
+```
+
+<br/>
+
+---
+
+<br/>
+
+### 2. 🌐 Web Dashboard & AI Processing Models Pipeline (React 18 + Vite)
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              SMART FARMING DASHBOARD (WEB UI)                    │
+│              Built with React 18 + Vite + Zustand                │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+       ┌────────────────────┼────────────────────┐
+       │                    │                    │
+       ▼                    ▼                    ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│  FIELD MAP   │    │ LIVE METRICS │    │ AI PLANT DOC │
+│ (MapLibre)   │    │ (Telemetry)  │    │  (Vision)    │
+└──────┬───────┘    └──────┬───────┘    └──────┬───────┘
+       │                   │                   │
+       ├── Draw Polygons   ├── Soil Moisture   ├── Leaf Photo Upload
+       ├── Swath Routing   ├── Soil pH          ├── MobileNetV2 ONNX
+       ├── Waypoint Safety ├── NPK Levels      ├── YOLO11n Pest Net
+       └── GeoJSON Export  └── Weather Stream  └── BioTrove-CLIP Net
+       │                   │                   │
+       └───────────────────┼───────────────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────────────────┐
+│             DATA PROCESSING & MODEL INFERENCE PIPELINE           │
+│                                                                  │
+│  • Plant Disease: MobileNetV2 ONNX Engine                        │
+│  • Pest Detection: YOLO11n Object Detector                        │
+│  • Nutrient Deficiencies: BioTrove-CLIP Model                    │
+│  • Irrigation Needs: Evapotranspiration + Weather Model          │
+│  • Risk Engine: Sensor Rules & Environmental ML                   │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                     DECISION & REPORT TABS                       │
+│                                                                  │
+│ ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │
+│ │ WEATHER TAB  │  │ IRRIGATION   │  │ AUDIT REPORT │             │
+│ │ OpenWeather  │  │ Evapotrans-  │  │ Printable    │             │
+│ │ 5-Day Forecast  piration    │  │ Farm Summary │             │
+│ └──────────────┘  └──────────────┘  └──────────────┘             │
 └───────────────────────────┬──────────────────────────────────────┘
                             │
                             ▼
