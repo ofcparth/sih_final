@@ -10,11 +10,14 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
 
 ---
 
-## 🏗️ Offline Edge-AI Smart Farming System Architecture
+## 🏗️ System Workflow Architectures
+
+### 1. 🤖 Autonomous Edge AI Rover Workflow (Radxa Board Edge Hardware)
 
 ```
                               ┌───────────────┐
                               │   AI ROVER    │
+                              │ (Radxa Board) │
                               └───────┬───────┘
                                       │
                  ┌────────────────────┼────────────────────┐
@@ -31,6 +34,7 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
                  ▼
         ┌──────────────────────┐
         │   EDGE COMPUTING     │
+        │ (Radxa Hardware Edge)│
         │  Local Preprocessing │
         │  Image Processing    │
         │  Sensor Processing   │
@@ -63,15 +67,20 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
 ┌──────────────────────────────────────────────────────────────────┐
 │                INTEGRATION / DECISION ENGINE                    │
 │                                                                  │
-│  • Standardize model outputs & validate confidence              │
-│  • Combine vision AI + real-time telemetry sensor outputs        │
-│  • Calculate crop risk index & generate explainable advisory     │
+│  • Standardize model outputs                                    │
+│  • Validate confidence                                          │
+│  • Combine AI + sensor outputs                                  │
+│  • Calculate individual risks                                   │
+│  • Calculate overall crop risk                                  │
+│  • Generate explainable results                                 │
 └───────────────────────────┬──────────────────────────────────────┘
                             │
                             ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                    RECOMMENDATION ENGINE                         │
-│  Pest Action │ Disease Action │ Nutrient Action │ Irrigation    │
+│                                                                  │
+│  Pest Action │ Disease Action │ Nutrient Action                 │
+│  Irrigation Advice │ Environmental Risk Response                 │
 └───────────────────────────┬──────────────────────────────────────┘
                             │
                             ▼
@@ -82,10 +91,109 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
                             │
                             ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│              LOCAL WEB DASHBOARD (REACT 18 + VITE)               │
+│                     LOCAL WEB DASHBOARD                          │
 │                                                                  │
 │  Crop Health │ Pest │ Disease │ Nutrient │ Irrigation            │
-│  Environmental Risk │ GPS Map │ Explainable AI │ Advisory        │
+│  Temperature │ Humidity │ Soil Moisture │ Rainfall               │
+│  Environmental Risk │ GPS Map │ Explainable AI │ Recommendations │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+                       👨‍🌾 FARMER
+```
+
+<br/>
+
+---
+
+<br/>
+
+### 2. 🚨 Emergency SOS AI Voice Calling Workflow (Twilio + Ultravox AI)
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│             ROVER SAFETY MONITOR / TELEMETRY WATCHDOG            │
+│                                                                  │
+│  Checks for:                                                     │
+│  • Rover Physical Blockage / Stuck state (Batch B2)              │
+│  • Critical Low Battery Warning (< 15%)                          │
+│  • Signal Loss / Emergency Override Trigger                     │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                 EMERGENCY INCIDENT DETECTED                      │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+┌──────────────────────────────────────────────────────────────────┐
+│             NODE.JS VOICE DISPATCHER (`services/voice_agent`)     │
+│                                                                  │
+│  • Authenticates Twilio Credentials                              │
+│  • Connects Ultravox Voice Session (`ultravox-v0.7`)             │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+┌──────────────────────────────────────────────────────────────────┐
+│         ULTRAVOX AI VOICE AGENT + TWILIO MEDIA STREAM            │
+│                                                                  │
+│  1. Dials Farmer's Phone (`DESTINATION_PHONE_NUMBER`)            │
+│  2. Speaks Greeting: "Hello! This is Agri Bot Field Support..."  │
+│  3. Interactive Voice Decision Tree:                             │
+│     ├── Option A: Manual Field Visit -> Keeps Rover Stopped     │
+│     └── Option B: App Recovery Command -> Initiates Reset        │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                    LOG ENTRY & DASHBOARD SYNC                    │
+│                                                                  │
+│  • Updates App Alert status                                      │
+│  • Records call outcome and farmer response                      │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+                       👨‍🌾 FARMER
+```
+
+<br/>
+
+---
+
+<br/>
+
+### 3. 🌐 Web Dashboard & Features Architecture (React 18 + Vite)
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              SMART FARMING DASHBOARD (WEB UI)                    │
+│              Built with React 18 + Vite + Zustand                │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+       ┌────────────────────┼────────────────────┐
+       │                    │                    │
+       ▼                    ▼                    ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│  FIELD MAP   │    │ LIVE METRICS │    │ AI PLANT DOC │
+│ (MapLibre)   │    │ (Telemetry)  │    │  (Vision)    │
+└──────┬───────┘    └──────┬───────┘    └──────┬───────┘
+       │                   │                   │
+       ├── Draw Polygons   ├── Soil Moisture   ├── Upload Leaf
+       ├── Lawn Mower Route├── Soil pH          ├── ONNX Inference
+       ├── Waypoint Safety ├── NPK Levels      ├── Pest Diagnosis
+       └── GeoJSON Export  └── Weather Stream  └── Spray Advisory
+       │                   │                   │
+       └───────────────────┼───────────────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                     DECISION & REPORT TABS                       │
+│                                                                  │
+│ ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │
+│ │ WEATHER TAB  │  │ IRRIGATION   │  │ AUDIT REPORT │             │
+│ │ OpenWeather  │  │ Evapotrans-  │  │ Printable    │             │
+│ │ 5-Day Forecast  piration    │  │ Farm Summary │             │
+│ └──────────────┘  └──────────────┘  └──────────────┘             │
 └───────────────────────────┬──────────────────────────────────────┘
                             │
                             ▼
