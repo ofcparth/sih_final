@@ -12,7 +12,51 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
 
 ## 🏗️ System Workflow Architectures
 
-### 1. 🤖 Autonomous Edge AI Rover Workflow (Radxa Board Edge Hardware)
+### 1. 🌐 Web Dashboard & Features Architecture (React 18 + Vite)
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              SMART FARMING DASHBOARD (WEB UI)                    │
+│              Built with React 18 + Vite + Zustand                │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+       ┌────────────────────┼────────────────────┐
+       │                    │                    │
+       ▼                    ▼                    ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│  FIELD MAP   │    │ LIVE METRICS │    │ AI PLANT DOC │
+│ (MapLibre)   │    │ (Telemetry)  │    │  (Vision)    │
+└──────┬───────┘    └──────┬───────┘    └──────┬───────┘
+       │                   │                   │
+       ├── Draw Polygons   ├── Soil Moisture   ├── Upload Leaf
+       ├── Lawn Mower Route├── Soil pH          ├── ONNX Inference
+       ├── Waypoint Safety ├── NPK Levels      ├── Pest Diagnosis
+       └── GeoJSON Export  └── Weather Stream  └── Spray Advisory
+       │                   │                   │
+       └───────────────────┼───────────────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                     DECISION & REPORT TABS                       │
+│                                                                  │
+│ ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │
+│ │ WEATHER TAB  │  │ IRRIGATION   │  │ AUDIT REPORT │             │
+│ │ OpenWeather  │  │ Evapotrans-  │  │ Printable    │             │
+│ │ 5-Day Forecast  piration    │  │ Farm Summary │             │
+│ └──────────────┘  └──────────────┘  └──────────────┘             │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+                       👨‍🌾 FARMER
+```
+
+<br/>
+
+---
+
+<br/>
+
+### 2. 🤖 Autonomous Edge AI Rover Workflow (Radxa Board Edge Hardware)
 
 ```
                               ┌───────────────┐
@@ -108,16 +152,17 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
 
 <br/>
 
-### 2. 🚨 Emergency SOS AI Voice Calling Workflow (Twilio + Ultravox AI)
+### 3. 🚨 Multilingual Emergency Voice Calling & GPS Dispatch Workflow
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │             ROVER SAFETY MONITOR / TELEMETRY WATCHDOG            │
 │                                                                  │
-│  Checks for:                                                     │
+│  Monitors Real-Time Parameters:                                  │
 │  • Rover Physical Blockage / Stuck state (Batch B2)              │
+│  • GPS Live Location (e.g. 21.1458° N, 79.0882° E)              │
 │  • Critical Low Battery Warning (< 15%)                          │
-│  • Signal Loss / Emergency Override Trigger                     │
+│  • System Override / Emergency Stop Trigger                      │
 └───────────────────────────┬──────────────────────────────────────┘
                             │
                             ▼
@@ -125,75 +170,27 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
 │                 EMERGENCY INCIDENT DETECTED                      │
 └───────────────────────────┬──────────────────────────────────────┘
                             │
-                            ▼
-┌──────────────────────────────────────────────────────────────────┐
-│             NODE.JS VOICE DISPATCHER (`services/voice_agent`)     │
-│                                                                  │
-│  • Authenticates Twilio Credentials                              │
-│  • Connects Ultravox Voice Session (`ultravox-v0.7`)             │
-└───────────────────────────┬──────────────────────────────────────┘
-                            │
-                            ▼
-┌──────────────────────────────────────────────────────────────────┐
-│         ULTRAVOX AI VOICE AGENT + TWILIO MEDIA STREAM            │
-│                                                                  │
-│  1. Dials Farmer's Phone (`DESTINATION_PHONE_NUMBER`)            │
-│  2. Speaks Greeting: "Hello! This is Agri Bot Field Support..."  │
-│  3. Interactive Voice Decision Tree:                             │
-│     ├── Option A: Manual Field Visit -> Keeps Rover Stopped     │
-│     └── Option B: App Recovery Command -> Initiates Reset        │
-└───────────────────────────┬──────────────────────────────────────┘
+           ┌────────────────┴────────────────┐
+           │                                 │
+           ▼                                 ▼
+┌──────────────────────────────┐  ┌──────────────────────────────┐
+│  MULTILINGUAL AI VOICE AGENT │  │    AUTOMATED SMS DISPATCH    │
+│ (Low Latency <200ms, LowCost)│  │ (Emergency GPS Coordinates)  │
+│                              │  │                              │
+│ • Dials Farmer Phone         │  │ • Generates Instant SMS      │
+│ • Hindi / Regional Voice     │  │ • Includes Precise Rover GPS │
+│ • Live Interactive AI Call   │  │   Batch B2 Coordinates & Map │
+│ • Field Recovery Options     │  │   Link                       │
+└──────────┬───────────────────┘  └──────────┬───────────────────┘
+           │                                 │
+           └────────────────┬────────────────┘
                             │
                             ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                    LOG ENTRY & DASHBOARD SYNC                    │
 │                                                                  │
-│  • Updates App Alert status                                      │
-│  • Records call outcome and farmer response                      │
-└───────────────────────────┬──────────────────────────────────────┘
-                            │
-                            ▼
-                       👨‍🌾 FARMER
-```
-
-<br/>
-
----
-
-<br/>
-
-### 3. 🌐 Web Dashboard & Features Architecture (React 18 + Vite)
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│              SMART FARMING DASHBOARD (WEB UI)                    │
-│              Built with React 18 + Vite + Zustand                │
-└───────────────────────────┬──────────────────────────────────────┘
-                            │
-       ┌────────────────────┼────────────────────┐
-       │                    │                    │
-       ▼                    ▼                    ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  FIELD MAP   │    │ LIVE METRICS │    │ AI PLANT DOC │
-│ (MapLibre)   │    │ (Telemetry)  │    │  (Vision)    │
-└──────┬───────┘    └──────┬───────┘    └──────┬───────┘
-       │                   │                   │
-       ├── Draw Polygons   ├── Soil Moisture   ├── Upload Leaf
-       ├── Lawn Mower Route├── Soil pH          ├── ONNX Inference
-       ├── Waypoint Safety ├── NPK Levels      ├── Pest Diagnosis
-       └── GeoJSON Export  └── Weather Stream  └── Spray Advisory
-       │                   │                   │
-       └───────────────────┼───────────────────┘
-                           │
-                           ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                     DECISION & REPORT TABS                       │
-│                                                                  │
-│ ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │
-│ │ WEATHER TAB  │  │ IRRIGATION   │  │ AUDIT REPORT │             │
-│ │ OpenWeather  │  │ Evapotrans-  │  │ Printable    │             │
-│ │ 5-Day Forecast  piration    │  │ Farm Summary │             │
-│ └──────────────┘  └──────────────┘  └──────────────┘             │
+│  • Updates App Alert Status & Emergency Incident Logs            │
+│  • Displays Farmer Call Response & Interactive Overrides        │
 └───────────────────────────┬──────────────────────────────────────┘
                             │
                             ▼
@@ -239,9 +236,9 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
 - **Cloud Camera Feed Stream**: Integrates with Google Drive & Cloud Storage to automatically fetch real-time rover snapshot images (`drive_service.py`).
 - **Google Sheets Data Pipeline**: Automatic CSV streaming and parsing from connected field sensor spreadsheets (`gsheet_service.py`).
 
-### 4. 📞 Ultravox AI & Twilio Voice Emergency Agent (`services/voice_agent/`)
-- **Automated Voice Dispatch**: Real-time outbound call integration via Twilio Media Streams connected to Ultravox AI voice model (`ultravox-v0.7`).
-- **Emergency Incident Escalation**: Immediate interactive voice calling for critical rover blockages, low battery warnings, or safety stops.
+### 4. 📞 Multilingual Voice Calling & Emergency SMS Dispatcher (`services/voice_agent/`)
+- **Low-Latency & Cost-Optimized Voice AI**: Real-time outbound multilingual voice calling (<200ms latency) via Twilio Media Streams for farmer emergency alerts.
+- **SMS GPS Coordinate Dispatch**: Automated SMS dispatch attaching exact rover GPS coordinates (e.g., `21.1458° N, 79.0882° E`) and direct map navigation links when a critical rover blockage or low battery event occurs.
 
 ### 5. ⚡ Redis Caching Layer (`redis_service.py`)
 - **Telemetry Query Caching**: High-throughput Redis caching layer (`redis_service.py`) for streaming sensor data and Google Sheets polling optimization.
