@@ -125,14 +125,22 @@ async def fetch_latest_from_drive():
         "diagnosis": result
     }
 
+from redis_service import redis_service
+
 @app.get("/gsheet/latest")
 async def fetch_latest_gsheet_data():
+    cached = redis_service.get("gsheet_latest")
+    if cached:
+        return {"data": cached, "cached": True}
+
     df = fetch_and_process_gsheet_data()
     if df is None or df.empty:
         return {"error": "Failed to fetch or process Google Sheets data."}
     
     latest_row = df.iloc[-1].to_dict()
-    return {"data": latest_row}
+    redis_service.set("gsheet_latest", latest_row, ttl_seconds=15)
+    return {"data": latest_row, "cached": False}
+
 
 if __name__ == "__main__":
     import uvicorn

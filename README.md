@@ -46,9 +46,12 @@ An end-to-end, high-precision Precision Agriculture and Autonomous Rover Managem
 - **Cloud Camera Feed Stream**: Integrates with Google Drive & Cloud Storage to automatically fetch real-time rover snapshot images (`drive_service.py`).
 - **Google Sheets Data Pipeline**: Automatic CSV streaming and parsing from connected field sensor spreadsheets (`gsheet_service.py`).
 
-### 4. ☀️ Precision Weather & Irrigation Advisory (`WeatherTab.jsx` & `IrrigationTab.jsx`)
-- **Real-Time Weather Integration**: Live OpenWeatherMap API integration providing current weather conditions, 5-day forecasts, wind speeds, UV index, and rain probabilities.
-- **Smart Irrigation Engine**: Evapotranspiration-driven water schedule recommendations to optimize field moisture.
+### 4. 📞 Ultravox AI & Twilio Voice Emergency Agent (`services/voice_agent/`)
+- **Automated Voice Dispatch**: Real-time outbound call integration via Twilio Media Streams connected to Ultravox AI voice model (`ultravox-v0.7`).
+- **Emergency Incident Escalation**: Immediate interactive voice calling for critical rover blockages, low battery warnings, or safety stops.
+
+### 5. ⚡ Redis Caching Layer (`redis_service.py`)
+- **Telemetry Query Caching**: High-throughput Redis caching layer (`redis_service.py`) for streaming sensor data and Google Sheets polling optimization.
 
 ---
 
@@ -59,6 +62,7 @@ sih_final/
 ├── backend/
 │   └── ai_plant_doctor/                # Core FastAPI & AI Inference Engine
 │       ├── app.py                      # FastAPI App entrypoint (Port 8001)
+│       ├── redis_service.py            # Redis Caching Service layer
 │       ├── plant_doctor.py             # MobileNetV2 ONNX Vision Classifier engine
 │       ├── mission_service.py          # GIS Field Coverage Path Planner algorithm
 │       ├── ai_agronomy_service.py      # LLM Agronomy Advisory service (Gemini/Groq)
@@ -67,6 +71,10 @@ sih_final/
 │       ├── drive_service.py            # Google Drive live camera feed stream
 │       ├── plant_disease.json          # Plant disease knowledge database
 │       └── models/                     # ONNX model weights and label manifests
+├── services/
+│   └── voice_agent/                    # Twilio + Ultravox Voice AI Outbound Call Service
+│       ├── index.js                    # Node.js Voice Dispatcher & WebSocket bridge
+│       └── package.json                # Voice Agent dependencies
 ├── src/                                # Frontend React Application Source
 │   ├── App.jsx                         # Main Router & Application Shell
 │   ├── components/                     # Component Modules
