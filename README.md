@@ -4,7 +4,9 @@
 [![React](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-blue)](https://reactjs.org/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%20%2B%20ONNX-009688)](https://fastapi.tiangolo.com/)
 [![GIS](https://img.shields.io/badge/GIS-MapLibre%20%2B%20Turf.js-orange)](https://maplibre.org/)
-[![AI Engine](https://img.shields.io/badge/AI-MobileNetV2%20%2B%20Gemini%2FGroq-8E44AD)](https://onnxruntime.ai/)
+[![Live Demo](https://img.shields.io/badge/Railway%20Live-sihfinal--production.up.railway.app-brightgreen?style=for-the-badge&logo=railway)](https://sihfinal-production.up.railway.app/)
+
+> 🚀 **Live Production Application:** [https://sihfinal-production.up.railway.app/](https://sihfinal-production.up.railway.app/)
 
 An end-to-end, high-precision Precision Agriculture and Autonomous Rover Management System built for Smart India Hackathon (SIH). This unified platform integrates real-time IoT field telemetry, autonomous rover GIS mission planning, ONNX vision-based crop disease diagnosis, and generative agronomy AI advisory.
 
