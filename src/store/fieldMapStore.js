@@ -40,6 +40,12 @@ function getWeatherCodeEmoji(code) {
   return '🌤️';
 }
 
+function getApiBase() {
+  const configured = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
+  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  return configured || (isLocalhost ? 'http://localhost:8001' : '');
+}
+
 function computeClientSideRoute(boundaryPoints, startPoint, endPoint, criticalPoints, routeSettings) {
   if (!boundaryPoints || boundaryPoints.length < 3) return null;
 
@@ -492,30 +498,72 @@ export const useFieldMapStore = create((set, get) => ({
     if (pts.length < 3) return { valid: false, error: 'At least 3 points required' };
 
     const coords = pts.map(p => [p.lng, p.lat]);
-    try {
-      const res = await fetch('http://localhost:8001/api/fields/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coordinates: coords })
-      });
-      const data = await res.json();
-      if (data.valid) {
-        set({
-          boundaryClosed: true,
-          fieldMetrics: {
-            area_m2: data.area_m2,
-            area_ha: data.area_ha,
-            perimeter_m: data.perimeter_m,
-            point_count: pts.length
-          },
-          activeMode: 'SELECT'
+    const API_BASE = getApiBase();
+    if (API_BASE) {
+      try {
+        const res = await fetch(`${API_BASE}/api/fields/validate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coordinates: coords })
         });
-        return { valid: true };
-      } else {
-        return { valid: false, error: data.error };
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data.valid) {
+            set({
+              boundaryClosed: true,
+              fieldMetrics: {
+                area_m2: data.area_m2,
+                area_ha: data.area_ha,
+                perimeter_m: data.perimeter_m,
+                point_count: pts.length
+              },
+              activeMode: 'SELECT'
+            });
+            return { valid: true };
+          } else {
+            return { valid: false, error: data.error };
+          }
+        }
+      } catch (e) {
+        console.warn('Backend geometry validation unavailable, computing client-side:', e.message);
       }
-    } catch (e) {
-      return { valid: false, error: 'Failed to validate geometry on backend' };
+    }
+
+    // Client-side geometry calculation fallback (using Shoelace & Haversine formula)
+    try {
+      const ring = [...coords];
+      if (ring[0][0] !== ring[ring.length - 1][0] || ring[0][1] !== ring[ring.length - 1][1]) {
+        ring.push(ring[0]);
+      }
+      const meanLat = ring.reduce((s, p) => s + p[1], 0) / ring.length;
+      const mPerLat = 111139.0;
+      const mPerLng = 111139.0 * Math.cos((meanLat * Math.PI) / 180.0);
+      const xy = ring.map(p => [p[0] * mPerLng, p[1] * mPerLat]);
+      let area = 0;
+      for (let i = 0; i < xy.length - 1; i++) {
+        area += xy[i][0] * xy[i + 1][1] - xy[i + 1][0] * xy[i][1];
+      }
+      const areaM2 = Math.abs(area) / 2.0;
+      let perimM = 0;
+      for (let i = 0; i < xy.length - 1; i++) {
+        const dx = xy[i + 1][0] - xy[i][0];
+        const dy = xy[i + 1][1] - xy[i][1];
+        perimM += Math.sqrt(dx * dx + dy * dy);
+      }
+      set({
+        boundaryClosed: true,
+        fieldMetrics: {
+          area_m2: Math.round(areaM2 * 10) / 10,
+          area_ha: Math.round((areaM2 / 10000.0) * 1000) / 1000,
+          perimeter_m: Math.round(perimM * 10) / 10,
+          point_count: pts.length
+        },
+        activeMode: 'SELECT'
+      });
+      return { valid: true };
+    } catch (err) {
+      return { valid: false, error: 'Failed to compute boundary geometry' };
     }
   },
 
@@ -645,48 +693,54 @@ export const useFieldMapStore = create((set, get) => ({
       strategy: routeSettings.strategy
     };
 
-    try {
-      const res = await fetch('http://localhost:8001/api/routes/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || 'Backend generation returned non-OK');
+    const API_BASE = getApiBase();
+    if (API_BASE) {
+      try {
+        const res = await fetch(`${API_BASE}/api/routes/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data && data.route) {
+            set({
+              route: data.route,
+              routeStats: {
+                distance_m: data.distance_m,
+                estimated_time_s: data.estimated_time_s,
+                coverage_percent: data.coverage_percent,
+                waypoints_count: data.waypoints ? data.waypoints.length : 0
+              },
+              routeOutdated: false,
+              isGeneratingRoute: false
+            });
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Backend route generation unavailable, computing client-side:', e.message);
       }
-      const data = await res.json();
-      if (!data.route) throw new Error('No route in response');
+    }
+
+    // Client-side route generator fallback
+    const fallbackData = computeClientSideRoute(boundaryPoints, startPoint, endPoint, criticalPoints, routeSettings);
+    if (fallbackData && fallbackData.route) {
       set({
-        route: data.route,
+        route: fallbackData.route,
         routeStats: {
-          distance_m: data.distance_m,
-          estimated_time_s: data.estimated_time_s,
-          coverage_percent: data.coverage_percent,
-          waypoints_count: data.waypoints ? data.waypoints.length : 0
+          distance_m: fallbackData.distance_m,
+          estimated_time_s: fallbackData.estimated_time_s,
+          coverage_percent: fallbackData.coverage_percent,
+          waypoints_count: fallbackData.waypoints ? fallbackData.waypoints.length : 0
         },
         routeOutdated: false,
-        isGeneratingRoute: false
+        isGeneratingRoute: false,
+        routeError: null
       });
-    } catch (e) {
-      console.warn('Backend route generation failed/unreachable, using client-side generator:', e.message);
-      const fallbackData = computeClientSideRoute(boundaryPoints, startPoint, endPoint, criticalPoints, routeSettings);
-      if (fallbackData && fallbackData.route) {
-        set({
-          route: fallbackData.route,
-          routeStats: {
-            distance_m: fallbackData.distance_m,
-            estimated_time_s: fallbackData.estimated_time_s,
-            coverage_percent: fallbackData.coverage_percent,
-            waypoints_count: fallbackData.waypoints ? fallbackData.waypoints.length : 0
-          },
-          routeOutdated: false,
-          isGeneratingRoute: false,
-          routeError: null
-        });
-      } else {
-        set({ routeError: 'Could not generate coverage route for the selected field geometry.', isGeneratingRoute: false });
-      }
+    } else {
+      set({ routeError: 'Could not generate coverage route for the selected field geometry.', isGeneratingRoute: false });
     }
   },
 
@@ -696,14 +750,17 @@ export const useFieldMapStore = create((set, get) => ({
   savedMissionId: null,
 
   fetchSavedMissions: async () => {
+    const API_BASE = getApiBase();
+    if (!API_BASE) return;
     try {
-      const res = await fetch('http://localhost:8001/api/missions');
-      if (res.ok) {
+      const res = await fetch(`${API_BASE}/api/missions`);
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const list = await res.json();
         set({ savedMissions: list });
       }
     } catch (e) {
-      console.error('Failed to fetch missions:', e);
+      console.warn('Failed to fetch missions from backend:', e.message);
     }
   },
 
@@ -739,28 +796,63 @@ export const useFieldMapStore = create((set, get) => ({
       }
     };
 
-    try {
-      const res = await fetch('http://localhost:8001/api/missions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      set({ isSavingMission: false, savedMissionId: data.mission_id });
-      get().fetchSavedMissions();
-      return { success: true, mission_id: data.mission_id };
-    } catch (e) {
-      set({ isSavingMission: false });
-      return { success: false, error: 'Failed to save mission to backend' };
+    const API_BASE = getApiBase();
+    if (API_BASE) {
+      try {
+        const res = await fetch(`${API_BASE}/api/missions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
+          set({ isSavingMission: false, savedMissionId: data.mission_id });
+          get().fetchSavedMissions();
+          return { success: true, mission_id: data.mission_id };
+        }
+      } catch (e) {
+        console.warn('Remote save failed, saving mission locally:', e.message);
+      }
     }
+
+    // Save locally in memory / localStorage fallback so user is never blocked
+    const localMissionId = `mission_local_${Date.now()}`;
+    const localMission = { mission_id: localMissionId, ...payload, created_at: new Date().toISOString() };
+    const currentSaved = get().savedMissions || [];
+    set({
+      isSavingMission: false,
+      savedMissionId: localMissionId,
+      savedMissions: [localMission, ...currentSaved]
+    });
+    return { success: true, mission_id: localMissionId, isLocal: true };
   },
 
   loadMission: async (missionId) => {
-    try {
-      const res = await fetch(`http://localhost:8001/api/missions/${missionId}`);
-      if (!res.ok) return;
-      const data = await res.json();
+    let data = null;
+    const API_BASE = getApiBase();
+    if (API_BASE) {
+      try {
+        const res = await fetch(`${API_BASE}/api/missions/${missionId}`);
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          data = await res.json();
+        }
+      } catch (e) {
+        console.warn('Remote load mission failed, checking local store:', e.message);
+      }
+    }
 
+    if (!data) {
+      data = (get().savedMissions || []).find(m => m.mission_id === missionId);
+    }
+
+    if (!data) {
+      console.warn('Mission not found locally or remotely:', missionId);
+      return;
+    }
+
+    try {
       const polyCoords = data.field?.polygon?.coordinates?.[0] || [];
       const boundaryPts = polyCoords.slice(0, polyCoords.length - 1).map((c, i) => ({
         id: `pt_load_${i}_${Date.now()}`,
@@ -776,7 +868,7 @@ export const useFieldMapStore = create((set, get) => ({
         boundaryClosed: boundaryPts.length >= 3,
         fieldMetrics: {
           area_m2: data.area_m2 || 0,
-          area_ha: round(data.area_m2 / 10000.0, 4),
+          area_ha: round((data.area_m2 || 0) / 10000.0, 4),
           perimeter_m: data.perimeter_m || 0,
           point_count: boundaryPts.length
         },
@@ -785,8 +877,8 @@ export const useFieldMapStore = create((set, get) => ({
         criticalPoints: data.critical_points || [],
         route: data.route?.geometry ? { type: 'Feature', geometry: data.route.geometry } : null,
         routeStats: {
-          distance_m: data.route_distance_m || 0,
-          estimated_time_s: data.estimated_time_s || 0,
+          distance_m: data.route_distance_m || data.route?.distance_m || 0,
+          estimated_time_s: data.estimated_time_s || data.route?.estimated_time_s || 0,
           coverage_percent: 94,
           waypoints_count: 120
         },
@@ -794,7 +886,7 @@ export const useFieldMapStore = create((set, get) => ({
         savedMissionId: data.mission_id
       });
 
-      if (loc.lat && loc.lng) {
+      if (loc && loc.lat && loc.lng) {
         get().fetchWeatherForLocation(loc.lat, loc.lng);
       }
     } catch (e) {

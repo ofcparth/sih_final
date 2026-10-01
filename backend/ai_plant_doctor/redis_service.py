@@ -1,6 +1,9 @@
 import os
 import json
-import redis
+try:
+    import redis
+except ImportError:
+    redis = None
 import logging
 
 logger = logging.getLogger("krishivision.cache")
@@ -10,7 +13,7 @@ class RedisCacheService:
         self.host = host or os.getenv("REDIS_HOST", "localhost")
         self.port = int(port or os.getenv("REDIS_PORT", 6379))
         self.db = int(db or os.getenv("REDIS_DB", 0))
-        self.enabled = os.getenv("REDIS_ENABLED", "true").lower() == "true"
+        self.enabled = (os.getenv("REDIS_ENABLED", "true").lower() == "true") and (redis is not None)
         self.client = None
 
         if self.enabled:

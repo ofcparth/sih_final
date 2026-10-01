@@ -44,11 +44,17 @@ export default function App() {
     // Global fetch for sensor data to populate across all tabs
     const fetchSensors = async () => {
       try {
-        const res = await fetch('http://localhost:8001/gsheet/latest');
-        if (res.ok) {
+        const configuredApi = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
+        const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+        const API_BASE = configuredApi || (isLocalhost ? 'http://localhost:8001' : '');
+        if (!API_BASE) return;
+
+        const res = await fetch(`${API_BASE}/gsheet/latest`);
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
           const data = await res.json();
           let changed = false;
-          if (data.data) {
+          if (data && data.data) {
             if (data.data.Temperature) {
               SENSOR_READINGS.airTemp = data.data.Temperature;
               WEATHER_CURRENT.temp = data.data.Temperature;
@@ -70,7 +76,7 @@ export default function App() {
           }
         }
       } catch (e) {
-        console.error("Global sensor sync failed", e);
+        console.warn("Global sensor sync unavailable:", e.message);
       }
     };
     fetchSensors();
