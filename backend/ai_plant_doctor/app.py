@@ -119,10 +119,39 @@ async def fetch_latest_from_drive():
     
     return {
         "source": "drive",
+        "folder_id": drive_svc.folder_id,
+        "folder_name": drive_svc.folder_name,
+        "account_email": drive_svc.account_email,
         "filename": filename,
         "timestamp": timestamp,
         "original_image": f"data:image/jpeg;base64,{img_str}",
         "diagnosis": result
+    }
+
+@app.get("/drive/config")
+async def get_drive_configuration():
+    return {
+        "folder_id": drive_svc.folder_id,
+        "folder_name": drive_svc.folder_name,
+        "account_email": drive_svc.account_email,
+        "is_authenticated": drive_svc.service is not None
+    }
+
+@app.post("/drive/config")
+async def update_drive_configuration(config: dict):
+    drive_svc.update_config(
+        folder_id=config.get("folder_id"),
+        folder_name=config.get("folder_name"),
+        account_email=config.get("account_email")
+    )
+    return {
+        "status": "success",
+        "message": "Drive configuration updated successfully",
+        "config": {
+            "folder_id": drive_svc.folder_id,
+            "folder_name": drive_svc.folder_name,
+            "account_email": drive_svc.account_email
+        }
     }
 
 from redis_service import redis_service

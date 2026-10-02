@@ -7,8 +7,9 @@ from google.auth.transport.requests import Request
 from PIL import Image
 
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
-FOLDER_NAME = 'Agribotimage'
-TARGET_FOLDER_ID = '1nRLc9j0Fb3XoYu1WzeeknM1acwdzAndE'
+FOLDER_NAME = os.getenv('GOOGLE_DRIVE_FOLDER_NAME', 'Agribotimage')
+TARGET_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID', '1nRLc9j0Fb3XoYu1WzeeknM1acwdzAndE')
+ACCOUNT_EMAIL = os.getenv('GOOGLE_DRIVE_ACCOUNT_EMAIL', 'sihsymbiosis2026@gmail.com')
 
 class DriveService:
     def __init__(self):
@@ -16,6 +17,18 @@ class DriveService:
         self.service = None
         self.current_index = 0
         self.started = False
+        self.folder_name = FOLDER_NAME
+        self.folder_id = TARGET_FOLDER_ID
+        self.account_email = ACCOUNT_EMAIL
+
+    def update_config(self, folder_id=None, folder_name=None, account_email=None):
+        if folder_id:
+            self.folder_id = folder_id.strip()
+        if folder_name:
+            self.folder_name = folder_name.strip()
+        if account_email:
+            self.account_email = account_email.strip()
+        self.current_index = 0
         
     def _ensure_service(self):
         if self.service:
@@ -49,7 +62,8 @@ class DriveService:
         if not self._ensure_service():
             return get_fallback()
             
-        folder_id = TARGET_FOLDER_ID
+        folder_id = self.folder_id or TARGET_FOLDER_ID
+        folder_name = self.folder_name or FOLDER_NAME
         
         # Verify target folder or fallback to folder name query
         try:
@@ -63,7 +77,7 @@ class DriveService:
 
         if not img_items:
             try:
-                query = f"name='{FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+                query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
                 results = self.service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
                 items = results.get('files', [])
                 if items:
