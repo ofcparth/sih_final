@@ -18,7 +18,17 @@ import staticImagesList from '../data/staticImages.json';
 // Pool of real crop captures loaded from static folder
 const ROVER_STREAM_POOL = Array.isArray(staticImagesList) ? staticImagesList : [];
 
-const INITIAL_HISTORY = [];
+const INITIAL_HISTORY = ROVER_STREAM_POOL.slice(0, 4).map((img, idx) => ({
+  id: idx + 1,
+  time: `2026-10-02 0${6 - idx}:15:00`,
+  file: img.filename,
+  crop: 'Agribot Field Crop Pathology',
+  species: 'Field Crop',
+  conf: 92.5 + idx,
+  severity: idx === 0 ? 'High' : (idx === 1 ? 'Critical' : 'Moderate'),
+  spray: 'Spray Required',
+  image: img.url
+}));
 
 export default function LiveDashboardTab() {
   // Feed source configuration with persistence
