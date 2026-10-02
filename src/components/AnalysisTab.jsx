@@ -208,7 +208,7 @@ export default function AnalysisTab() {
       setResult(data);
 
       // Persist analysis record to Firebase Cloud Firestore and local storage
-      saveDetectionRecord({
+      await saveDetectionRecord({
         crop: data.crop || targetCrop.split(' ')[0],
         disease_name: data.disease_name,
         confidence: data.confidence,
@@ -225,7 +225,7 @@ export default function AnalysisTab() {
       safeData.visualizations = { roi_box: imageUrl, attention_heatmap: imageUrl };
       setResult(safeData);
 
-      saveDetectionRecord({
+      await saveDetectionRecord({
         crop: safeData.crop || targetCrop.split(' ')[0],
         disease_name: safeData.disease_name,
         confidence: safeData.confidence,
@@ -456,10 +456,13 @@ export default function AnalysisTab() {
                 {/* Header Condition Block */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '14px', color: s.textMuted }}>Primary Condition:</span>
                       <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: s.warning, padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', border: `1px solid rgba(245, 158, 11, 0.2)` }}>
                         {result.severity}
+                      </span>
+                      <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#059669', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', border: '1px solid rgba(16, 185, 129, 0.25)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        ☁️ Saved to Firestore
                       </span>
                     </div>
                     <h1 style={{ fontSize: '32px', fontWeight: '700', margin: '0 0 8px 0', color: s.textMain }}>{result.disease_name}</h1>

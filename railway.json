@@ -1,11 +1,12 @@
-# ── Railway Root Configuration ──
-# Railway will automatically detect multi-service or single-service deployments via Procfile or Dockerfiles.
-
-[build]
-builder = "NIXPACKS"
-
-[deploy]
-startCommand = "npm run preview -- --host 0.0.0.0 --port $PORT"
-healthcheckPath = "/"
-healthcheckTimeout = 300
-restartPolicyType = "ON_FAILURE"
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "npm run build && npm run preview -- --host 0.0.0.0 --port $PORT",
+    "healthcheckPath": "/",
+    "healthcheckTimeout": 300,
+    "restartPolicyType": "ON_FAILURE"
+  }
+}

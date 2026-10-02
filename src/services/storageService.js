@@ -6,9 +6,7 @@
 //  - Live inspection telemetry logs
 // ============================================================
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
-  getFirestore,
   collection,
   addDoc,
   getDocs,
@@ -19,47 +17,22 @@ import {
   deleteDoc,
   doc
 } from 'firebase/firestore';
-import { DEFAULT_FIREBASE_CONFIG } from './firebaseConfig';
+import { db, isFirebaseConfigured, firebaseConfig } from './firebaseConfig';
 import { DETECTION_HISTORY } from '../data/mockData';
 
 const LOCAL_STORAGE_DETECTIONS_KEY = 'kisan_ai_detection_history';
 const LOCAL_STORAGE_MISSIONS_KEY = 'kisan_ai_saved_missions';
 
-let db = null;
-let firebaseInitialized = false;
-
-// Check if valid Firebase configuration is present
-export function isFirebaseConfigured() {
-  const cfg = DEFAULT_FIREBASE_CONFIG;
-  return Boolean(
-    cfg &&
-    cfg.projectId &&
-    cfg.apiKey &&
-    !cfg.apiKey.includes('YOUR_') &&
-    !cfg.projectId.includes('demo')
-  );
-}
+export { isFirebaseConfigured, db };
 
 // Initialize Firebase App & Firestore if valid config exists
 export function initFirebase() {
-  if (firebaseInitialized && db) return db;
-  try {
-    const cfg = DEFAULT_FIREBASE_CONFIG;
-    if (isFirebaseConfigured()) {
-      const app = getApps().length === 0 ? initializeApp(cfg) : getApp();
-      db = getFirestore(app);
-      firebaseInitialized = true;
-      console.log('✅ Firebase Cloud Firestore initialized for project:', cfg.projectId);
-      return db;
-    }
-  } catch (err) {
-    console.warn('⚠️ Firebase initialization deferred, using local persistent storage:', err.message);
+  if (db && isFirebaseConfigured()) {
+    return db;
   }
   return null;
 }
 
-// Trigger initial connection attempt
-initFirebase();
 
 // ─────────────────────────────────────────────
 // Detection Records (Image Analysis History)
