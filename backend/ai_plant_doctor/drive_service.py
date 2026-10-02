@@ -54,6 +54,24 @@ class DriveService:
         fallback_img_path = os.path.join(base_dir, "test_blank.jpg")
 
         def get_fallback():
+            agribot_dir = os.path.join(base_dir, "agribot_images")
+            if os.path.exists(agribot_dir):
+                files = sorted([f for f in os.listdir(agribot_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))])
+                if files:
+                    chosen = files[self.current_index % len(files)]
+                    self.current_index += 1
+                    img_path = os.path.join(agribot_dir, chosen)
+                    try:
+                        img = Image.open(img_path).convert("RGB")
+                        from datetime import datetime
+                        return {
+                            "image": img,
+                            "filename": chosen,
+                            "timestamp": datetime.now().isoformat()
+                        }, None
+                    except Exception as e:
+                        print("Error opening agribot image:", e)
+
             if os.path.exists(fallback_img_path):
                 img = Image.open(fallback_img_path).convert("RGB")
                 return {"image": img, "filename": "Agribot_Live_Camera_Feed.jpg", "timestamp": "2026-09-29T18:00:00Z"}, None
