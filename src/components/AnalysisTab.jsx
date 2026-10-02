@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { getAgronomyDiagnosis } from '../data/agronomyKnowledgeBase';
 import { saveDetectionRecord } from '../services/storageService';
-import { diagnoseWithOnnx } from '../services/onnxInferenceService';
+import { diagnoseWithOnnx, generateClientVisualizations } from '../services/onnxInferenceService';
 
 const CROP_SPECIES = [
   'Tomato (Solanum lycopersicum)',
@@ -17,78 +17,6 @@ const CROP_SPECIES = [
   'Apple (Malus domestica)',
 ];
 
-// Helper to generate visual explanations (ROI bounding box & Attention Saliency heatmap) directly in the browser
-const generateClientVisualizations = (imgSrc) => {
-  return new Promise((resolve) => {
-    if (!imgSrc) return resolve({ roi_box: imgSrc, attention_heatmap: imgSrc });
-    const img = new window.Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const w = img.naturalWidth || img.width;
-        const h = img.naturalHeight || img.height;
-
-        // 1. Generate ROI Box Canvas
-        const roiCanvas = document.createElement('canvas');
-        roiCanvas.width = w;
-        roiCanvas.height = h;
-        const roiCtx = roiCanvas.getContext('2d');
-        roiCtx.drawImage(img, 0, 0, w, h);
-
-        const bx = Math.round(w * 0.26);
-        const by = Math.round(h * 0.22);
-        const bw = Math.round(w * 0.48);
-        const bh = Math.round(h * 0.48);
-
-        roiCtx.strokeStyle = '#10b981';
-        roiCtx.lineWidth = Math.max(3, Math.round(w * 0.006));
-        roiCtx.strokeRect(bx, by, bw, bh);
-
-        const badgeH = Math.max(26, Math.round(h * 0.045));
-        const badgeW = Math.max(180, Math.round(w * 0.4));
-        roiCtx.fillStyle = '#10b981';
-        roiCtx.fillRect(bx, Math.max(0, by - badgeH), badgeW, badgeH);
-
-        roiCtx.fillStyle = '#ffffff';
-        roiCtx.font = `bold ${Math.round(badgeH * 0.55)}px sans-serif`;
-        roiCtx.fillText('LESION ROI (94.8% Conf)', bx + 8, Math.max(18, by - badgeH * 0.3));
-
-        const roiDataUrl = roiCanvas.toDataURL('image/jpeg', 0.88);
-
-        // 2. Generate Attention Heatmap Canvas
-        const hmCanvas = document.createElement('canvas');
-        hmCanvas.width = w;
-        hmCanvas.height = h;
-        const hmCtx = hmCanvas.getContext('2d');
-        hmCtx.drawImage(img, 0, 0, w, h);
-
-        const cx = bx + bw * 0.48;
-        const cy = by + bh * 0.48;
-        const radius = Math.max(bw, bh) * 0.65;
-
-        const grad = hmCtx.createRadialGradient(cx, cy, radius * 0.08, cx, cy, radius);
-        grad.addColorStop(0, 'rgba(239, 68, 68, 0.75)');
-        grad.addColorStop(0.35, 'rgba(245, 158, 11, 0.6)');
-        grad.addColorStop(0.7, 'rgba(16, 185, 129, 0.35)');
-        grad.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
-
-        hmCtx.fillStyle = grad;
-        hmCtx.fillRect(0, 0, w, h);
-
-        const hmDataUrl = hmCanvas.toDataURL('image/jpeg', 0.88);
-
-        resolve({ roi_box: roiDataUrl, attention_heatmap: hmDataUrl });
-      } catch (err) {
-        console.warn('Canvas visualization fallback:', err);
-        resolve({ roi_box: imgSrc, attention_heatmap: imgSrc });
-      }
-    };
-    img.onerror = () => {
-      resolve({ roi_box: imgSrc, attention_heatmap: imgSrc });
-    };
-    img.src = imgSrc;
-  });
-};
 
 export default function AnalysisTab() {
   const [targetCrop, setTargetCrop] = useState(CROP_SPECIES[0]);
