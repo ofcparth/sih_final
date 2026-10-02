@@ -13,122 +13,12 @@ import {
 import { diagnoseWithOnnx } from '../services/onnxInferenceService';
 import { saveDetectionRecord } from '../services/storageService';
 
-// Pool of real Agribot & field rover crop captures for continuous AI stream
-const ROVER_STREAM_POOL = [
-  {
-    filename: 'Agribot_20260913_155359.jpg',
-    url: '/agribot_images/Agribot_20260913_155359.jpg',
-    crop: 'Field Crop Leaf',
-    hintDisease: 'Leaf Spot Pathology'
-  },
-  {
-    filename: 'Agribot_Potato_Early_Blight.jpg',
-    url: '/agribot_images/Agribot_Potato_Early_Blight.jpg',
-    crop: 'Potato',
-    hintDisease: 'Potato Early Blight (Alternaria solani)'
-  },
-  {
-    filename: 'Agribot_Corn_Rust.jpg',
-    url: '/agribot_images/Agribot_Corn_Rust.jpg',
-    crop: 'Corn',
-    hintDisease: 'Corn Common Rust'
-  },
-  {
-    filename: 'Agribot_Apple_Scab.jpg',
-    url: '/agribot_images/Agribot_Apple_Scab.jpg',
-    crop: 'Apple',
-    hintDisease: 'Apple Scab'
-  },
-  {
-    filename: 'Agribot_Tomato_Healthy.jpg',
-    url: '/agribot_images/Agribot_Tomato_Healthy.jpg',
-    crop: 'Tomato',
-    hintDisease: 'Tomato Healthy'
-  },
-  {
-    filename: 'Agribot_Leaf_Capture_01.jpg',
-    url: '/agribot_images/Agribot_Leaf_Capture_01.jpg',
-    crop: 'Field Crop',
-    hintDisease: 'Pathology Inspection'
-  },
-  {
-    filename: 'pi_capture_20260913_112845_0001.jpg',
-    url: '/agribot_images/pi_capture_20260913_112845_0001.jpg',
-    crop: 'Field Canopy',
-    hintDisease: 'Foliage Inspection'
-  },
-  {
-    filename: 'pi_capture_20260913_112856_0002.jpg',
-    url: '/agribot_images/pi_capture_20260913_112856_0002.jpg',
-    crop: 'Field Canopy',
-    hintDisease: 'Leaf Health Scan'
-  },
-  {
-    filename: 'pi_capture_20260913_112906_0003.jpg',
-    url: '/agribot_images/pi_capture_20260913_112906_0003.jpg',
-    crop: 'Field Canopy',
-    hintDisease: 'Crop Pathogen Scan'
-  },
-  {
-    filename: 'Agribot_Processed_Scan_01.jpg',
-    url: '/agribot_images/Agribot_Processed_Scan_01.jpg',
-    crop: 'Plant Leaf',
-    hintDisease: 'Leaf Blight Analysis'
-  },
-  {
-    filename: 'Agribot_Processed_Scan_02.jpg',
-    url: '/agribot_images/Agribot_Processed_Scan_02.jpg',
-    crop: 'Plant Leaf',
-    hintDisease: 'Pathogen Detection'
-  }
-];
+import staticImagesList from '../data/staticImages.json';
 
-const INITIAL_HISTORY = [
-  { 
-    id: 1, 
-    time: '2026-10-02 06:20:15', 
-    file: 'Agribot_Potato_Early_Blight.jpg', 
-    crop: 'Potato Early Blight (Alternaria solani)', 
-    species: 'Potato', 
-    conf: 94.6, 
-    severity: 'Critical', 
-    spray: 'Spray Required',
-    image: '/agribot_images/Agribot_Potato_Early_Blight.jpg'
-  },
-  { 
-    id: 2, 
-    time: '2026-10-02 06:18:40', 
-    file: 'Agribot_Corn_Rust.jpg', 
-    crop: 'Corn Common Rust', 
-    species: 'Corn', 
-    conf: 91.8, 
-    severity: 'Critical', 
-    spray: 'Spray Required',
-    image: '/agribot_images/Agribot_Corn_Rust.jpg'
-  },
-  { 
-    id: 3, 
-    time: '2026-10-02 06:16:55', 
-    file: 'Agribot_Apple_Scab.jpg', 
-    crop: 'Apple Scab', 
-    species: 'Apple', 
-    conf: 88.5, 
-    severity: 'High', 
-    spray: 'Spray Required',
-    image: '/agribot_images/Agribot_Apple_Scab.jpg'
-  },
-  { 
-    id: 4, 
-    time: '2026-10-02 06:14:10', 
-    file: 'Agribot_Tomato_Healthy.jpg', 
-    crop: 'Tomato Healthy', 
-    species: 'Tomato', 
-    conf: 97.5, 
-    severity: 'Healthy', 
-    spray: 'No Spray',
-    image: '/agribot_images/Agribot_Tomato_Healthy.jpg'
-  },
-];
+// Pool of real crop captures loaded from static folder
+const ROVER_STREAM_POOL = Array.isArray(staticImagesList) ? staticImagesList : [];
+
+const INITIAL_HISTORY = [];
 
 export default function LiveDashboardTab() {
   // Feed source configuration with persistence
@@ -252,12 +142,19 @@ export default function LiveDashboardTab() {
         filename = nextUserItem.name;
       }
 
-      // 3. Simulated Autonomous Field Rover Stream cycling through distinct crops
-      if (!ingestedImage) {
+      // 3. Images from static/ folder
+      if (!ingestedImage && ROVER_STREAM_POOL.length > 0) {
         const item = ROVER_STREAM_POOL[poolIndexRef.current % ROVER_STREAM_POOL.length];
         poolIndexRef.current += 1;
         ingestedImage = item.url;
         filename = item.filename;
+      }
+
+      if (!ingestedImage) {
+        setLiveData(null);
+        setErrorMsg('Waiting for images in static folder. Please provide or add images to the /static folder, or click "Add Photos to Feed".');
+        setLoading(false);
+        return;
       }
 
       // Run REAL MobileNetV2 ONNX inference in browser on this exact image
