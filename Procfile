@@ -1,7 +1,6 @@
 # Procfile for Railway Deployment Services
 
-# Service 1: React + Vite Web Dashboard Frontend
-web: npm run build && npm run preview -- --host 0.0.0.0 --port $PORT
+web: npm run build && npx serve -s dist -l tcp://0.0.0.0:$PORT
 
 # Service 2: FastAPI AI Plant Doctor Backend (Optionally deploy from backend/ai_plant_doctor)
 # api: cd backend/ai_plant_doctor && uvicorn app:app --host 0.0.0.0 --port $PORT
