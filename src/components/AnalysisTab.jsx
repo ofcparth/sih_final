@@ -6,6 +6,7 @@ import {
   Loader2, Sparkles, ChevronDown
 } from 'lucide-react';
 import { getAgronomyDiagnosis } from '../data/agronomyKnowledgeBase';
+import { saveDetectionRecord } from '../services/storageService';
 
 const CROP_SPECIES = [
   'Tomato (Solanum lycopersicum)',
@@ -205,11 +206,36 @@ export default function AnalysisTab() {
       }
 
       setResult(data);
+
+      // Persist analysis record to Firebase Cloud Firestore and local storage
+      saveDetectionRecord({
+        crop: data.crop || targetCrop.split(' ')[0],
+        disease_name: data.disease_name,
+        confidence: data.confidence,
+        severity: data.severity,
+        cause: data.cause,
+        cure: data.cure,
+        imageUrl: imageUrl,
+        pesticide_advisory: data.pesticide_advisory,
+        nutrient_analysis: data.nutrient_analysis
+      });
     } catch (fallbackErr) {
       console.error("Analysis processor fallback error:", fallbackErr);
       const safeData = getAgronomyDiagnosis(targetCrop);
       safeData.visualizations = { roi_box: imageUrl, attention_heatmap: imageUrl };
       setResult(safeData);
+
+      saveDetectionRecord({
+        crop: safeData.crop || targetCrop.split(' ')[0],
+        disease_name: safeData.disease_name,
+        confidence: safeData.confidence,
+        severity: safeData.severity,
+        cause: safeData.cause,
+        cure: safeData.cure,
+        imageUrl: imageUrl,
+        pesticide_advisory: safeData.pesticide_advisory,
+        nutrient_analysis: safeData.nutrient_analysis
+      });
     } finally {
       setAnalyzing(false);
     }

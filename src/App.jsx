@@ -18,6 +18,7 @@ import LiveDashboardTab from './components/LiveDashboardTab';
 import FieldMapTab from './components/FieldMapTab';
 import { FARM_INFO, ALERTS, SENSOR_READINGS, WEATHER_CURRENT, DETECTION_HISTORY } from './data/mockData';
 import { useFieldMapStore } from './store/fieldMapStore';
+import { getLocalDetections, fetchAllDetections, isFirebaseConfigured } from './services/storageService';
 
 const TABS = [
   { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
@@ -215,11 +216,24 @@ export default function App() {
 
 function HistoryTab() {
   const [filter, setFilter] = useState('All');
+  const [records, setRecords] = useState(() => getLocalDetections());
   const types = ['All', 'Disease', 'Pest', 'Nutrient'];
 
+  useEffect(() => {
+    fetchAllDetections().then(data => {
+      if (data && data.length > 0) setRecords(data);
+    });
+
+    const onDetectionsUpdated = (e) => {
+      if (e.detail) setRecords(e.detail);
+    };
+    window.addEventListener('kisan_detections_updated', onDetectionsUpdated);
+    return () => window.removeEventListener('kisan_detections_updated', onDetectionsUpdated);
+  }, []);
+
   const filtered = filter === 'All'
-    ? DETECTION_HISTORY
-    : DETECTION_HISTORY.filter(r => r.module === filter);
+    ? records
+    : records.filter(r => r.module === filter);
 
   const statusColor = {
     'Action Required': 'critical',
@@ -238,8 +252,21 @@ function HistoryTab() {
       <div className="page-header">
         <div className="page-header-row">
           <div>
-            <h1 className="page-title">Detection History</h1>
-            <p className="page-subtitle">All AI model detections and analysis records for this season</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <h1 className="page-title">Detection History</h1>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                padding: '3px 8px',
+                borderRadius: '12px',
+                background: isFirebaseConfigured() ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                color: isFirebaseConfigured() ? '#10b981' : '#3b82f6',
+                border: isFirebaseConfigured() ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)'
+              }}>
+                {isFirebaseConfigured() ? '☁️ Cloud Firestore Active' : '💾 Persistent Storage Active'}
+              </span>
+            </div>
+            <p className="page-subtitle">Real-time synchronized plant pathology and field detection records ({records.length} stored)</p>
           </div>
           <div className="pill-group">
             {types.map(t => (
