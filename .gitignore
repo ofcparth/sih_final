@@ -35,3 +35,4 @@ credentials.json
 firebase-credentials.json
 token.json
 *.db
+public/models/
