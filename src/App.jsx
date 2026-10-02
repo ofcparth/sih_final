@@ -36,10 +36,28 @@ const TABS = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam) return tabParam;
+      const hash = window.location.hash.replace('#', '');
+      if (hash) return hash;
+    }
+    return 'overview';
+  });
   const [lastRefresh, setLastRefresh] = useState(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
   const [dataTick, setDataTick] = useState(0); // Forces re-render
   const fieldLocation = useFieldMapStore(state => state.location);
+
+  // Sync activeTab with URL hash
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location);
+      url.searchParams.set('tab', activeTab);
+      window.history.replaceState({}, '', url);
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     // Global fetch for sensor data to populate across all tabs
