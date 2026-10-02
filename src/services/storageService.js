@@ -65,6 +65,20 @@ initFirebase();
 // Detection Records (Image Analysis History)
 // ─────────────────────────────────────────────
 
+// Helper to ensure clean, valid data for Firestore (replaces undefined with null)
+function sanitizeForFirestore(obj) {
+  if (obj === undefined) return null;
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeForFirestore);
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) {
+      out[k] = sanitizeForFirestore(v);
+    }
+  }
+  return out;
+}
+
 export async function saveDetectionRecord(record) {
   const newRecord = {
     id: record.id || `DET-${Date.now().toString().slice(-6)}`,
@@ -94,12 +108,20 @@ export async function saveDetectionRecord(record) {
     console.warn('LocalStorage save failed:', e);
   }
 
-  // 2. Persist to Firebase Cloud Firestore if configured
+  // 2. Persist to Firebase Cloud Firestore
   const firestore = initFirebase();
   if (firestore) {
     try {
+      // Strip large base64 image strings to stay safely under Firestore's 1MB document limit
+      const firestorePayload = { ...newRecord };
+      if (firestorePayload.imageUrl && (firestorePayload.imageUrl.startsWith('data:') || firestorePayload.imageUrl.length > 50000)) {
+        firestorePayload.imageUrl = null;
+        firestorePayload.hasImage = true;
+      }
+
+      const cleanData = sanitizeForFirestore(firestorePayload);
       const docRef = await addDoc(collection(firestore, 'detections'), {
-        ...newRecord,
+        ...cleanData,
         serverTimestamp: serverTimestamp(),
       });
       console.log('☁️ Synced detection to Firestore document ID:', docRef.id);
