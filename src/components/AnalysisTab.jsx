@@ -8,6 +8,7 @@ import {
 import { getAgronomyDiagnosis } from '../data/agronomyKnowledgeBase';
 import { saveDetectionRecord } from '../services/storageService';
 import { diagnoseWithOnnx, generateClientVisualizations } from '../services/onnxInferenceService';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const CROP_SPECIES = [
   'Tomato (Solanum lycopersicum)',
@@ -19,6 +20,7 @@ const CROP_SPECIES = [
 
 
 export default function AnalysisTab() {
+  const { t, currentLanguage } = useLanguage();
   const [targetCrop, setTargetCrop] = useState(CROP_SPECIES[0]);
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
@@ -197,16 +199,16 @@ export default function AnalysisTab() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: s.primary, marginBottom: '6px', fontWeight: '600' }}>
             <span style={{ height: '8px', width: '8px', borderRadius: '50%', background: s.primary, display: 'inline-block', boxShadow: `0 0 8px ${s.primary}` }}></span>
-            AI Crop Diagnostic Engine • Live Images from Robot Stream (Latency &lt; 5s)
+            {t('analysis.enginePill', 'AI Crop Diagnostic Engine • Live Images from Robot Stream (Latency < 5s)')}
           </div>
-          <h1 style={{ fontSize: '26px', fontWeight: '700', margin: 0, color: s.textMain }}>AI Plant Pathology & Pest Diagnostics</h1>
+          <h1 style={{ fontSize: '26px', fontWeight: '700', margin: 0, color: s.textMain }}>{t('analysis.title', 'AI Plant Pathology & Pest Diagnostics')}</h1>
           <p style={{ color: s.textMuted, fontSize: '13px', margin: '6px 0 0 0', maxWidth: '750px' }}>
-            Multi-spectral leaf pathology diagnostics supporting live autonomous robot feeds with latency &lt; 5s and client-side MobileNetV2 ONNX neural inference.
+            {t('analysis.subtitle', 'Multi-spectral leaf pathology diagnostics supporting live autonomous robot feeds with latency < 5s and client-side MobileNetV2 ONNX neural inference.')}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>
           <span style={{ height: '8px', width: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 6px #10b981' }}></span>
-          ⚡ Live Robot Feed Latency: &lt; 5s (Sub-second Edge Transit)
+          {t('analysis.badgeStream', '⚡ Live Robot Feed Latency: < 5s (Sub-second Edge Transit)')}
         </div>
       </div>
 
@@ -217,10 +219,10 @@ export default function AnalysisTab() {
           
           {/* Upload Panel */}
           <div style={{ background: s.panelBg, border: `1px solid ${s.border}`, borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>Upload Crop Leaf Image</h2>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>{t('analysis.uploadTitle', 'Upload Crop Leaf Image')}</h2>
             
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '13px', color: s.textMuted, marginBottom: '8px' }}>Target Crop Species</label>
+              <label style={{ display: 'block', fontSize: '13px', color: s.textMuted, marginBottom: '8px' }}>{t('analysis.targetSpecies', 'Target Crop Species')}</label>
               <div style={{ position: 'relative' }}>
                 <select 
                   value={targetCrop}
@@ -239,42 +241,42 @@ export default function AnalysisTab() {
 
             {/* Quick Sample Presets */}
             <div style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: s.textMuted, marginBottom: '8px' }}>Quick Sample Leaf Presets:</div>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: s.textMuted, marginBottom: '8px' }}>{t('analysis.quickPresets', 'Quick Sample Leaf Presets:')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <button
                   type="button"
                   onClick={() => loadSampleImage('Agribot_Live_Rover', '/static/latest.jpg', CROP_SPECIES[1])}
                   style={{ gridColumn: 'span 2', padding: '8px 10px', borderRadius: '6px', border: '1px solid #a7f3d0', background: '#ecfdf5', color: '#065f46', fontSize: '11px', fontWeight: '700', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  🤖 Ingest Live Robot Image (Latency &lt; 5s)
+                  {t('analysis.ingestRobot', '🤖 Ingest Live Robot Image (Latency < 5s)')}
                 </button>
                 <button
                   type="button"
                   onClick={() => loadSampleImage('Potato_Blight', 'https://images.unsplash.com/photo-1592417817098-8f3d6eb147fc?auto=format&fit=crop&w=600&q=80', CROP_SPECIES[1])}
                   style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#f9fafb', fontSize: '11px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
                 >
-                  🥔 Potato Blight
+                  {t('analysis.potatoBlight', '🥔 Potato Blight')}
                 </button>
                 <button
                   type="button"
                   onClick={() => loadSampleImage('Tomato_Mold', 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&w=600&q=80', CROP_SPECIES[0])}
                   style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#f9fafb', fontSize: '11px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
                 >
-                  🍅 Tomato Mold
+                  {t('analysis.tomatoMold', '🍅 Tomato Mold')}
                 </button>
                 <button
                   type="button"
                   onClick={() => loadSampleImage('Corn_Rust', 'https://images.unsplash.com/photo-1535241749838-299277b6305f?auto=format&fit=crop&w=600&q=80', CROP_SPECIES[3])}
                   style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#f9fafb', fontSize: '11px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
                 >
-                  🌽 Corn Rust
+                  {t('analysis.cornRust', '🌽 Corn Rust')}
                 </button>
                 <button
                   type="button"
                   onClick={() => loadSampleImage('Grape_Leaf', 'https://images.unsplash.com/photo-1560493676-04071c5f467b?auto=format&fit=crop&w=600&q=80', CROP_SPECIES[2])}
                   style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#f9fafb', fontSize: '11px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
                 >
-                  🍇 Grape Leaf
+                  {t('analysis.grapeLeaf', '🍇 Grape Leaf')}
                 </button>
               </div>
             </div>
@@ -302,8 +304,8 @@ export default function AnalysisTab() {
               {!imageUrl ? (
                 <>
                   <ImageIcon size={32} style={{ color: s.textMuted, marginBottom: '12px' }} />
-                  <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>Click to browse or drop leaf image</div>
-                  <div style={{ fontSize: '12px', color: s.textMuted }}>Supports JPG, PNG, WEBP (Max 10MB)</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>{t('analysis.dropHint', 'Click to browse or drop leaf image')}</div>
+                  <div style={{ fontSize: '12px', color: s.textMuted }}>{t('analysis.dropSub', 'Supports JPG, PNG, WEBP (Max 10MB)')}</div>
                 </>
               ) : (
                 <div style={{ width: '100%' }}>
@@ -329,7 +331,7 @@ export default function AnalysisTab() {
               onMouseOut={e => { if(!analyzing && imageUrl) e.currentTarget.style.background = s.primary }}
             >
               {analyzing ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <FlaskConical size={18} />}
-              {analyzing ? 'Analyzing...' : 'Run AI Disease Diagnosis'}
+              {analyzing ? t('analysis.analyzing', 'Analyzing...') : t('analysis.runDiagnosis', 'Run AI Disease Diagnosis')}
             </button>
           </div>
 
@@ -338,15 +340,15 @@ export default function AnalysisTab() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '600' }}>
                 <Beaker size={16} color={s.primary} />
-                Integrated ML Pipeline
+                {t('analysis.pipelineTitle', 'Integrated ML Pipeline')}
               </div>
               <div style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.1)', color: s.primary, padding: '4px 8px', borderRadius: '4px', border: `1px solid rgba(16, 185, 129, 0.2)` }}>
-                ACTIVE (38 Classes)
+                {t('analysis.activeClasses', 'ACTIVE (38 Classes)')}
               </div>
             </div>
             
             <div style={{ fontSize: '13px', color: '#374151', marginBottom: '12px' }}>
-              <strong>Model:</strong> MobileNetV2 ONNX Classifier
+              <strong>Model:</strong> {t('analysis.modelDesc', 'MobileNetV2 ONNX Classifier')}
             </div>
             <div style={{ fontSize: '13px', color: s.textMuted, lineHeight: '1.5', marginBottom: '16px' }}>
               Coverage: 38 pathological classes across 14 crops (Apple, Potato, Tomato, Corn, Grape, Pepper, etc.)
@@ -379,18 +381,23 @@ export default function AnalysisTab() {
           {/* Top Navbar */}
           <div style={{ padding: '16px 24px', borderBottom: `1px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', gap: '8px' }}>
-              {['Diagnostic Report', 'Original Leaf', 'Leaf ROI (Box)', 'Attention Heatmap'].map(tab => (
+              {[
+                { id: 'report', label: t('analysis.tabReport', 'Diagnostic Report') },
+                { id: 'original', label: t('analysis.tabOriginal', 'Original Leaf') },
+                { id: 'roi', label: t('analysis.tabRoi', 'Leaf ROI (Box)') },
+                { id: 'heatmap', label: t('analysis.tabHeatmap', 'Attention Heatmap') }
+              ].map(tab => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab === 'Diagnostic Report' ? 'report' : tab)}
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
                   style={{
-                    background: activeTab === (tab === 'Diagnostic Report' ? 'report' : tab) ? s.primary : '#f3f4f6',
-                    color: activeTab === (tab === 'Diagnostic Report' ? 'report' : tab) ? '#fff' : s.textMuted,
+                    background: activeTab === tab.id ? s.primary : '#f3f4f6',
+                    color: activeTab === tab.id ? '#fff' : s.textMuted,
                     border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600',
                     cursor: 'pointer', transition: 'all 0.2s'
                   }}
                 >
-                  {tab}
+                  {tab.label}
                 </button>
               ))}
             </div>
@@ -406,15 +413,15 @@ export default function AnalysisTab() {
             {!result && !analyzing && (
               <div style={{ margin: 'auto', textAlign: 'center', color: s.textMuted }}>
                 <Sprout size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: s.textMain, marginBottom: '8px' }}>No image analyzed yet</h3>
-                <p style={{ fontSize: '14px' }}>Upload a crop image and click "Run AI Disease Diagnosis"</p>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', color: s.textMain, marginBottom: '8px' }}>{t('analysis.noImageTitle', 'No image analyzed yet')}</h3>
+                <p style={{ fontSize: '14px' }}>{t('analysis.noImageSub', 'Upload a crop image and click "Run AI Disease Diagnosis"')}</p>
               </div>
             )}
 
             {analyzing && (
               <div style={{ margin: 'auto', textAlign: 'center' }}>
                 <Loader2 size={40} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 16px', color: s.primary }} />
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: s.textMain }}>Running ML Pipeline...</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', color: s.textMain }}>{t('analysis.analyzing', 'Running ML Pipeline...')}</h3>
               </div>
             )}
 

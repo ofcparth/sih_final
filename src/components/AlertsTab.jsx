@@ -4,6 +4,7 @@ import {
   CheckCircle2, Filter, Clock,
 } from 'lucide-react';
 import { ALERTS } from '../data/mockData';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const StatusBadge = ({ type, children }) => (
   <span className={`status-badge ${type}`}>
@@ -13,9 +14,15 @@ const StatusBadge = ({ type, children }) => (
 );
 
 export default function AlertsTab() {
+  const { t, currentLanguage } = useLanguage();
   const [filter, setFilter] = useState('All');
 
-  const types = ['All', 'Critical', 'Warning', 'Info'];
+  const types = [
+    { id: 'All', label: t('alerts.allAlerts', 'All') },
+    { id: 'Critical', label: t('alerts.critical', 'Critical') },
+    { id: 'Warning', label: t('alerts.warning', 'Warning') },
+    { id: 'Info', label: t('alerts.info', 'Info') },
+  ];
 
   const filtered = filter === 'All'
     ? ALERTS
@@ -34,21 +41,21 @@ export default function AlertsTab() {
           <div>
             <h1 className="page-title">
               <Bell size={22} style={{ display: 'inline', marginRight: 8, color: 'var(--red-500)' }} />
-              Alerts &amp; Recommendations
+              {t('alerts.title', 'Alerts & Recommendations')}
             </h1>
-            <p className="page-subtitle">All active alerts from AI modules and sensor monitoring</p>
+            <p className="page-subtitle">{t('alerts.subtitle', 'All active alerts from AI modules and sensor monitoring')}</p>
           </div>
           <div className="pill-group">
-            {types.map(t => (
+            {types.map(tOption => (
               <button
-                key={t}
-                className={`pill-option ${filter === t ? 'active' : ''}`}
-                onClick={() => setFilter(t)}
+                key={tOption.id}
+                className={`pill-option ${filter === tOption.id ? 'active' : ''}`}
+                onClick={() => setFilter(tOption.id)}
               >
-                {t}
-                {t !== 'All' && (
+                {tOption.label}
+                {tOption.id !== 'All' && (
                   <span style={{ marginLeft: 4, fontSize: 10, fontWeight: 800 }}>
-                    ({ALERTS.filter(a => a.type === t.toLowerCase()).length})
+                    ({ALERTS.filter(a => a.type === tOption.id.toLowerCase()).length})
                   </span>
                 )}
               </button>

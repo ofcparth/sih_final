@@ -6,6 +6,7 @@ import {
 import { NUTRIENT_ANALYSIS } from '../data/mockData';
 import { AI_RECOMMENDATIONS } from '../data/aiRecommendations';
 import AIRecommendationPanel from './AIRecommendationPanel';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const StatusBadge = ({ type, children }) => (
   <span className={`status-badge ${type}`}>
@@ -29,6 +30,7 @@ const meterColor = {
 };
 
 export default function NutrientTab() {
+  const { t, currentLanguage } = useLanguage();
   const n = NUTRIENT_ANALYSIS;
 
   return (
@@ -36,9 +38,9 @@ export default function NutrientTab() {
       <div className="page-header">
         <h1 className="page-title">
           <Sparkles size={22} style={{ display: 'inline', marginRight: 8, color: 'var(--amber-500)' }} />
-          Nutrient Deficiency Analysis
+          {t('nutrient.title', 'Nutrient Deficiency Analysis')}
         </h1>
-        <p className="page-subtitle">Visual leaf analysis for macronutrient and micronutrient status · Model: {n.modelId}</p>
+        <p className="page-subtitle">{t('nutrient.subtitle', 'Visual leaf analysis for macronutrient and micronutrient status')} · Model: {n.modelId}</p>
       </div>
 
       {/* Summary Card */}
@@ -46,10 +48,10 @@ export default function NutrientTab() {
         <div className="module-panel-header">
           <div className="module-panel-title">
             <FlaskConical size={16} style={{ color: 'var(--amber-500)' }} />
-            Nutrient Status Summary
+            {t('nutrient.statusSummary', 'Nutrient Status Summary')}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <StatusBadge type="critical">Deficiency Detected</StatusBadge>
+            <StatusBadge type="critical">{t('nutrient.deficiencyDetected', 'Deficiency Detected')}</StatusBadge>
             <span style={{ fontSize: 12, color: 'var(--text-faint)', display: 'flex', alignItems: 'center', gap: 4 }}>
               <Clock size={12} />
               {new Date(n.detectedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}

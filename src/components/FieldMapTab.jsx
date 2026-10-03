@@ -5,6 +5,7 @@ import { GeocodingControl } from '@maptiler/geocoding-control/maplibregl';
 import * as turf from '@turf/turf';
 import { useFieldMapStore, CRITICAL_POINT_TYPES } from '../store/fieldMapStore';
 import CriticalPointEditor from './CriticalPointEditor';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   MapPin, Navigation, Plus, RotateCcw, RotateCw, Trash2, CheckCircle,
   Play, Flag, PlayCircle, Save, FolderOpen, AlertTriangle, Layers,
@@ -14,6 +15,7 @@ import {
 const MAPTILER_KEY = 'NMMX1yByDfJ2KILMkfKx';
 
 export default function FieldMapTab() {
+  const { t } = useLanguage();
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
   const locationMarkerRef = useRef(null);
@@ -441,11 +443,11 @@ export default function FieldMapTab() {
         }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: store.boundaryClosed ? '#10b981' : '#f59e0b' }} />
-            {store.boundaryClosed ? 'Field Boundary Closed' : 'Defining Field'}
+            {store.boundaryClosed ? t('fieldmap.closed', 'Field Boundary Closed') : t('fieldmap.defining', 'Defining Field')}
           </span>
           {store.routeOutdated && store.route && (
             <span style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '4px', background: '#fef2f2', padding: '2px 8px', borderRadius: '12px' }}>
-              <AlertTriangle size={13} /> Route Outdated
+              <AlertTriangle size={13} /> {t('common.filter', 'Route Outdated')}
             </span>
           )}
         </div>
@@ -459,19 +461,19 @@ export default function FieldMapTab() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '12px', height: '12px', background: '#fef08a', border: '2px solid #eab308', borderRadius: '3px' }} />
-            Field Boundary
+            {t('fieldmap.fieldBoundary', 'Field Boundary')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '16px', height: '3px', background: '#0284c7' }} />
-            Rover Route
+            {t('fieldmap.roverRoute', 'Rover Route')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '10px', height: '10px', background: '#16a34a', borderRadius: '50%' }} />
-            Start
+            {t('fieldmap.startPoint', 'Start')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '10px', height: '10px', background: '#dc2626', borderRadius: '50%' }} />
-            End
+            {t('fieldmap.endPoint', 'End')}
           </div>
         </div>
 
@@ -502,8 +504,8 @@ export default function FieldMapTab() {
               <Compass size={20} />
             </div>
             <div>
-              <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>FIELD MISSION PLANNER</h2>
-              <p style={{ fontSize: '11px', color: '#64748b' }}>Interactive Wheat Field Rover Route Planner</p>
+              <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>{t('fieldmap.missionPlanner', 'FIELD MISSION PLANNER')}</h2>
+              <p style={{ fontSize: '11px', color: '#64748b' }}>{t('fieldmap.subtitle', 'Interactive Wheat Field Rover Route Planner')}</p>
             </div>
           </div>
           <button
@@ -515,14 +517,14 @@ export default function FieldMapTab() {
               display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
             }}
           >
-            <FolderOpen size={14} /> Saved
+            <FolderOpen size={14} /> {t('common.save', 'Saved')}
           </button>
         </div>
 
         {/* 1. Location Panel */}
         <div style={{ background: '#ffffff', padding: '14px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
           <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <MapPin size={16} color="#eab308" /> 1. Field Location
+            <MapPin size={16} color="#eab308" /> 1. {t('fieldmap.fieldLocation', 'Field Location')}
           </h3>
           <button
             onClick={handleCurrentLocation}
@@ -532,7 +534,7 @@ export default function FieldMapTab() {
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer'
             }}
           >
-            <Navigation size={14} /> Use Current Location
+            <Navigation size={14} /> {t('fieldmap.useCurrentLocation', 'Use Current Location')}
           </button>
           <div style={{ marginTop: '8px', fontSize: '12px', color: '#64748b', background: '#f8fafc', padding: '8px', borderRadius: '6px' }}>
             <strong>Current:</strong> {store.location.name} <br />

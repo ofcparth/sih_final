@@ -6,6 +6,7 @@ import {
 import { PEST_DETECTION } from '../data/mockData';
 import { AI_RECOMMENDATIONS } from '../data/aiRecommendations';
 import AIRecommendationPanel from './AIRecommendationPanel';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const StatusBadge = ({ type, children }) => (
   <span className={`status-badge ${type}`}>
@@ -15,6 +16,7 @@ const StatusBadge = ({ type, children }) => (
 );
 
 export default function PestTab() {
+  const { t, currentLanguage } = useLanguage();
   const p = PEST_DETECTION;
   const confClass = p.confidence >= 80 ? '' : p.confidence >= 60 ? 'warn' : 'crit';
 
@@ -23,9 +25,9 @@ export default function PestTab() {
       <div className="page-header">
         <h1 className="page-title">
           <Bug size={22} style={{ display: 'inline', marginRight: 8, color: 'var(--orange-500)' }} />
-          Crop Pest Detection
+          {t('pest.title', 'Crop Pest Detection')}
         </h1>
-        <p className="page-subtitle">Visual pest identification using AI image analysis · Model: {p.modelId}</p>
+        <p className="page-subtitle">{t('pest.subtitle', 'Visual pest identification using AI image analysis')} · Model: {p.modelId}</p>
       </div>
 
       {/* Detection Result */}
@@ -33,10 +35,10 @@ export default function PestTab() {
         <div className="module-panel-header">
           <div className="module-panel-title">
             <Bug size={16} style={{ color: 'var(--orange-500)' }} />
-            Latest Pest Identification
+            {t('pest.latestResult', 'Latest Pest Identification')}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <StatusBadge type="critical">Pest Detected</StatusBadge>
+            <StatusBadge type="critical">{t('pest.pestDetected', 'Pest Detected')}</StatusBadge>
             <span style={{ fontSize: 12, color: 'var(--text-faint)', display: 'flex', alignItems: 'center', gap: 4 }}>
               <Clock size={12} />
               {new Date(p.detectedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}

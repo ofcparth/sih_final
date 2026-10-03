@@ -9,6 +9,7 @@ import {
 import { FARM_INFO, SENSOR_READINGS, DISEASE_DETECTION, PEST_DETECTION, NUTRIENT_ANALYSIS, IRRIGATION_STATUS, WEATHER_CURRENT } from '../data/mockData';
 import { AI_RECOMMENDATIONS, FARM_HEALTH_SCORE } from '../data/aiRecommendations';
 import AIRecommendationPanel from './AIRecommendationPanel';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const StatusBadge = ({ type, children }) => (
   <span className={`status-badge ${type}`}>
@@ -55,6 +56,7 @@ const MODULE_ICONS = {
 };
 
 export default function FarmReportTab() {
+  const { t, currentLanguage } = useLanguage();
   const [expandedModule, setExpandedModule] = useState('disease');
   const reportRef = useRef(null);
   const hs = FARM_HEALTH_SCORE;
@@ -210,19 +212,19 @@ ${Object.entries(AI_RECOMMENDATIONS).map(([key, rec]) => `
           <div>
             <h1 className="page-title">
               <FileText size={22} style={{ display: 'inline', marginRight: 8, color: 'var(--brand)' }} />
-              Complete Farm Analysis Report
+              {t('report.title', 'Complete Farm Analysis Report')}
             </h1>
             <p className="page-subtitle">
               <MapPin size={13} style={{ display: 'inline', marginRight: 4 }} />
-              {FARM_INFO.name} · {FARM_INFO.cropShort} · Generated {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+              {FARM_INFO.name} · {FARM_INFO.cropShort} · {t('report.subtitle', 'Executive farm health audit and input optimization')}
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn btn-secondary" onClick={handlePrint} id="print-report-btn">
-              <Printer size={15} /> Print
+              <Printer size={15} /> {t('report.print', 'Print')}
             </button>
             <button className="btn btn-primary" onClick={handleDownload} id="download-report-btn">
-              <Download size={15} /> Download Report
+              <Download size={15} /> {t('report.downloadPdf', 'Download Report')}
             </button>
           </div>
         </div>
@@ -236,7 +238,7 @@ ${Object.entries(AI_RECOMMENDATIONS).map(([key, rec]) => `
             <div className="module-panel-header">
               <div className="module-panel-title">
                 <Target size={16} style={{ color: 'var(--brand)' }} />
-                Overall Farm Health Score
+                {t('report.healthScore', 'Overall Farm Health Score')}
               </div>
             </div>
             <div className="module-panel-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '24px' }}>

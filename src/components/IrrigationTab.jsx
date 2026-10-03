@@ -7,6 +7,7 @@ import {
 import { IRRIGATION_STATUS, SENSOR_READINGS, WEATHER_FORECAST } from '../data/mockData';
 import { AI_RECOMMENDATIONS } from '../data/aiRecommendations';
 import AIRecommendationPanel from './AIRecommendationPanel';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const StatusBadge = ({ type, children }) => (
   <span className={`status-badge ${type}`}>
@@ -16,6 +17,7 @@ const StatusBadge = ({ type, children }) => (
 );
 
 export default function IrrigationTab() {
+  const { t, currentLanguage } = useLanguage();
   const ir = IRRIGATION_STATUS;
   const s = SENSOR_READINGS;
 
@@ -27,9 +29,9 @@ export default function IrrigationTab() {
       <div className="page-header">
         <h1 className="page-title">
           <Droplets size={22} style={{ display: 'inline', marginRight: 8, color: 'var(--blue-500)' }} />
-          Irrigation Management
+          {t('irrigation.title', 'Irrigation Management')}
         </h1>
-        <p className="page-subtitle">Sensor-based soil moisture monitoring and irrigation scheduling</p>
+        <p className="page-subtitle">{t('irrigation.subtitle', 'Sensor-based soil moisture monitoring and irrigation scheduling')}</p>
       </div>
 
       {/* Recommendation Banner */}

@@ -239,9 +239,15 @@ export default function App() {
 /* ── Inline History Tab (simple, no separate file needed) ── */
 
 function HistoryTab() {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState('All');
   const [records, setRecords] = useState(() => getLocalDetections());
-  const types = ['All', 'Disease', 'Pest', 'Nutrient'];
+  const types = [
+    { id: 'All', label: t('common.all', 'All') },
+    { id: 'Disease', label: t('nav.disease', 'Disease') },
+    { id: 'Pest', label: t('nav.pest', 'Pest') },
+    { id: 'Nutrient', label: t('nav.nutrient', 'Nutrient') },
+  ];
 
   useEffect(() => {
     fetchAllDetections().then(data => {
@@ -277,7 +283,7 @@ function HistoryTab() {
         <div className="page-header-row">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 className="page-title">Detection History</h1>
+              <h1 className="page-title">{t('nav.history', 'Detection History')}</h1>
               <span style={{
                 fontSize: '11px',
                 fontWeight: 600,
@@ -290,16 +296,16 @@ function HistoryTab() {
                 {isFirebaseConfigured() ? '☁️ Cloud Firestore Active' : '💾 Persistent Storage Active'}
               </span>
             </div>
-            <p className="page-subtitle">Real-time synchronized plant pathology and field detection records ({records.length} stored)</p>
+            <p className="page-subtitle">{t('history.subtitle', 'Real-time synchronized plant pathology and field detection records')} ({records.length})</p>
           </div>
           <div className="pill-group">
-            {types.map(t => (
+            {types.map(tOption => (
               <button
-                key={t}
-                className={`pill-option ${filter === t ? 'active' : ''}`}
-                onClick={() => setFilter(t)}
+                key={tOption.id}
+                className={`pill-option ${filter === tOption.id ? 'active' : ''}`}
+                onClick={() => setFilter(tOption.id)}
               >
-                {t}
+                {tOption.label}
               </button>
             ))}
           </div>
