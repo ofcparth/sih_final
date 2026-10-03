@@ -10,6 +10,7 @@ import {
   PEST_DETECTION, NUTRIENT_ANALYSIS, IRRIGATION_STATUS,
   WEATHER_CURRENT, ALERTS,
 } from '../data/mockData';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const StatusBadge = ({ type, children }) => (
   <span className={`status-badge ${type}`}>
@@ -34,6 +35,7 @@ function HeroCard({ icon, label, value, meta, statusClass, iconClass, onClick })
 }
 
 export default function OverviewTab({ setActiveTab }) {
+  const { t } = useLanguage();
   const criticalAlerts = ALERTS.filter(a => a.type === 'critical');
   const warningAlerts = ALERTS.filter(a => a.type === 'warning');
 
@@ -43,14 +45,14 @@ export default function OverviewTab({ setActiveTab }) {
       <div className="page-header">
         <div className="page-header-row">
           <div>
-            <h1 className="page-title">Farm Overview</h1>
+            <h1 className="page-title">{t('nav.overview', 'Farm Overview')}</h1>
             <p className="page-subtitle">
               <MapPin size={13} style={{ display: 'inline', marginRight: 4 }} />
-              {FARM_INFO.location} · {FARM_INFO.cropShort} · {FARM_INFO.growthStage} · Day {FARM_INFO.daysAfterSowing}
+              {FARM_INFO.location} · {FARM_INFO.cropShort} · {FARM_INFO.growthStage} · {t('brand.day', 'Day')} {FARM_INFO.daysAfterSowing}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <StatusBadge type="warning">2 Critical Alerts</StatusBadge>
+            <StatusBadge type="warning">2 {t('nav.alerts', 'Alerts')}</StatusBadge>
             <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>
               <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />
               Updated {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
@@ -63,7 +65,7 @@ export default function OverviewTab({ setActiveTab }) {
       <div className="hero-grid mb-5">
         <HeroCard
           icon={<ShieldAlert size={22} />}
-          label="Crop Disease"
+          label={t('nav.disease', 'Crop Disease')}
           value={DISEASE_DETECTION.disease.split('(')[0].trim()}
           meta={<><AlertOctagon size={12} style={{ color: 'var(--red-500)' }} /> {DISEASE_DETECTION.confidence}% confidence · Moderate severity</>}
           statusClass="critical"
@@ -72,7 +74,7 @@ export default function OverviewTab({ setActiveTab }) {
         />
         <HeroCard
           icon={<Bug size={22} />}
-          label="Pest Detection"
+          label={t('nav.pest', 'Pest Detection')}
           value="Whitefly Detected"
           meta={<><AlertOctagon size={12} style={{ color: 'var(--red-500)' }} /> {PEST_DETECTION.confidence}% confidence · High pressure</>}
           statusClass="critical"
@@ -81,7 +83,7 @@ export default function OverviewTab({ setActiveTab }) {
         />
         <HeroCard
           icon={<Sparkles size={22} />}
-          label="Nutrient Status"
+          label={t('nav.nutrient', 'Nutrient Status')}
           value="N Deficiency"
           meta={<><AlertTriangle size={12} style={{ color: 'var(--amber-500)' }} /> Nitrogen index: {SENSOR_READINGS.nitrogenIndex}/100 · Top-dress needed</>}
           statusClass="warning"
@@ -90,7 +92,7 @@ export default function OverviewTab({ setActiveTab }) {
         />
         <HeroCard
           icon={<Droplets size={22} />}
-          label="Irrigation"
+          label={t('nav.irrigation', 'Irrigation')}
           value="Irrigate Soon"
           meta={<><Clock size={12} /> Within 24h · Moisture {SENSOR_READINGS.soilMoisture}% · ETc {IRRIGATION_STATUS.cropWaterRequirement} mm/day</>}
           statusClass="warning"
@@ -99,7 +101,7 @@ export default function OverviewTab({ setActiveTab }) {
         />
         <HeroCard
           icon={<CloudSun size={22} />}
-          label="Weather Risk"
+          label={t('nav.weather', 'Weather Risk')}
           value={`${WEATHER_CURRENT.temp}°C · ${WEATHER_CURRENT.description}`}
           meta={<><Info size={12} /> Humidity {WEATHER_CURRENT.humidity}% · Rain Sat (70%)</>}
           statusClass="info"

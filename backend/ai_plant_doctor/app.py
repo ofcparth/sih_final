@@ -11,7 +11,17 @@ import base64
 
 import mission_service
 
-app = FastAPI(title="Kisan AI & Field Mission Planner API")
+# ── IndicTrans2 Multi-lingual Translation Service ──
+import os
+import sys
+translation_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "translation_service"))
+if translation_dir not in sys.path:
+    sys.path.insert(0, translation_dir)
+from router import router as translation_router
+from languages import LANGUAGES, LANGUAGE_METADATA
+from translator import indic_translator
+
+app = FastAPI(title="Kisan AI & Field Mission Planner API with IndicTrans2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,6 +30,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(translation_router)
+
+# Direct aliases for convenience
+@app.get("/languages")
+def get_languages_alias():
+    return LANGUAGES
+
+@app.post("/translate")
+def translate_alias(req: dict):
+    source = req.get("source", "en")
+    target = req.get("target", "hi")
+    text = req.get("text", "")
+    src_code = LANGUAGES.get(source, "eng_Latn")
+    tgt_code = LANGUAGES.get(target, "hin_Deva")
+    return {
+        "source": source,
+        "target": target,
+        "original": text,
+        "translated": indic_translator.translate_paragraph(text, src_code, tgt_code)
+    }
 
 doctor = PlantDoctor()
 drive_svc = DriveService()

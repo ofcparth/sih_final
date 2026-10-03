@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import { diagnoseWithOnnx } from '../services/onnxInferenceService';
 import { saveDetectionRecord } from '../services/storageService';
+import { useLanguage } from '../i18n/LanguageContext';
 
 import staticImagesList from '../data/staticImages.json';
 
@@ -32,6 +33,7 @@ const INITIAL_HISTORY = ROVER_STREAM_POOL.slice(0, 4).map((img, idx) => ({
 }));
 
 export default function LiveDashboardTab() {
+  const { t, currentLanguage } = useLanguage();
   // Feed source configuration with persistence
   const [config, setConfig] = useState(() => {
     try {
@@ -381,13 +383,13 @@ export default function LiveDashboardTab() {
             Continuous AI Ingestion • Live Images from Robot Stream (Latency &lt; 5s) • MobileNetV2 Active
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: '700', margin: 0, color: s.textMain }}>Live Image Dashboard</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: '700', margin: 0, color: s.textMain }}>{t('live.title', 'Live Image Dashboard')}</h1>
             <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: s.primary, padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px', border: `1px solid rgba(16, 185, 129, 0.3)` }}>
-              {config.autoPolling ? 'STREAMING ACTIVE' : 'STREAM PAUSED'}
+              {config.autoPolling ? t('common.active', 'STREAMING ACTIVE') : t('common.paused', 'STREAM PAUSED')}
             </span>
           </div>
           <p style={{ color: s.textMuted, fontSize: '14px', marginTop: '8px', maxWidth: '780px', lineHeight: '1.5' }}>
-            Real-time crop pathology diagnostics on live images streamed directly from the Agribot rover with edge latency &lt; 5s, client-side MobileNetV2 neural inference, saliency attention heatmaps, and Firebase synchronization.
+            {t('live.subtitle', 'Real-time crop pathology diagnostics on live images streamed directly from the Agribot rover with edge latency < 5s, client-side MobileNetV2 neural inference, saliency attention heatmaps, and Firebase synchronization.')}
           </p>
         </div>
 
@@ -494,11 +496,11 @@ export default function LiveDashboardTab() {
       {/* STAT CARDS */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         {[
-          { title: 'Total Ingestions Analyzed', value: stats.total.toString(), subtitle: 'MobileNetV2 neural passes', icon: HardDrive, color: s.primary },
-          { title: 'Robot Ingestion Latency', value: '< 5s', subtitle: `Live stream: ${liveData?.latency || '2.4s'} edge transit`, icon: Clock, color: '#059669' },
-          { title: 'Pathogen Detections', value: stats.pathogens.toString(), subtitle: 'Critical/High risk diseases', icon: AlertTriangle, color: s.warning },
-          { title: 'Crop Health Index', value: stats.healthIndex, subtitle: 'Optimal equilibrium leaves', icon: CheckCircle2, color: s.primary },
-          { title: 'Spray Advisories Issued', value: stats.sprayAdvisories.toString(), subtitle: 'Chemical prescription triggered', icon: ShieldAlert, color: '#0ea5e9' }
+          { title: t('live.totalAnalyzed', 'Total Ingestions Analyzed'), value: stats.total.toString(), subtitle: 'MobileNetV2 neural passes', icon: HardDrive, color: s.primary },
+          { title: t('live.robotLatency', 'Robot Ingestion Latency'), value: '< 5s', subtitle: `Live stream: ${liveData?.latency || '2.4s'} edge transit`, icon: Clock, color: '#059669' },
+          { title: t('live.pathogenDetections', 'Pathogen Detections'), value: stats.pathogens.toString(), subtitle: 'Critical/High risk diseases', icon: AlertTriangle, color: s.warning },
+          { title: t('live.cropHealthIndex', 'Crop Health Index'), value: stats.healthIndex, subtitle: 'Optimal equilibrium leaves', icon: CheckCircle2, color: s.primary },
+          { title: t('live.sprayAdvisories', 'Spray Advisories Issued'), value: stats.sprayAdvisories.toString(), subtitle: 'Chemical prescription triggered', icon: ShieldAlert, color: '#0ea5e9' }
         ].map((stat, i) => (
           <div key={i} style={{ background: s.panelBg, border: `1px solid ${s.border}`, borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
@@ -518,7 +520,7 @@ export default function LiveDashboardTab() {
         <div style={{ background: s.panelBg, border: `1px solid ${s.border}`, borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '600' }}>
-              <Camera size={16} color={s.primary} /> Latest Ingestion Capture
+              <Camera size={16} color={s.primary} /> {t('live.latestCapture', 'Latest Ingestion Capture')}
             </div>
             {/* View Mode Toggle: Original vs Attention Heatmap */}
             <div style={{ display: 'flex', background: '#f3f4f6', borderRadius: '6px', padding: '2px', border: '1px solid #e5e7eb' }}>
@@ -527,14 +529,14 @@ export default function LiveDashboardTab() {
                 onClick={() => setFeedViewMode('original')}
                 style={{ padding: '4px 8px', fontSize: '11px', fontWeight: '600', border: 'none', borderRadius: '4px', cursor: 'pointer', background: feedViewMode === 'original' ? '#ffffff' : 'transparent', color: feedViewMode === 'original' ? s.textMain : s.textMuted, boxShadow: feedViewMode === 'original' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}
               >
-                Original Leaf
+                {t('live.originalLeaf', 'Original Leaf')}
               </button>
               <button
                 type="button"
                 onClick={() => setFeedViewMode('heatmap')}
                 style={{ padding: '4px 8px', fontSize: '11px', fontWeight: '600', border: 'none', borderRadius: '4px', cursor: 'pointer', background: feedViewMode === 'heatmap' ? s.primary : 'transparent', color: feedViewMode === 'heatmap' ? '#ffffff' : s.textMuted, boxShadow: feedViewMode === 'heatmap' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none' }}
               >
-                Attention Heatmap
+                {t('live.attentionHeatmap', 'Attention Heatmap')}
               </button>
             </div>
           </div>
@@ -736,15 +738,15 @@ export default function LiveDashboardTab() {
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${s.border}` }}>
-                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>LEAF PHOTO</th>
-                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>TIMESTAMP</th>
-                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>FILENAME</th>
-                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>ROBOT LATENCY</th>
-                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>CROP & CONDITION</th>
-                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>AI CONFIDENCE</th>
-                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>SEVERITY</th>
-                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>SPRAY ADVISORY</th>
-                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>ACTION</th>
+                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>{t('live.leafPhoto', 'LEAF PHOTO')}</th>
+                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>{t('live.timestamp', 'TIMESTAMP')}</th>
+                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>{t('live.filename', 'FILENAME')}</th>
+                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>{t('live.latencyCol', 'ROBOT LATENCY')}</th>
+                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>{t('live.cropCondition', 'CROP & CONDITION')}</th>
+                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>{t('live.aiConfidence', 'AI CONFIDENCE')}</th>
+                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>{t('live.severityCol', 'SEVERITY')}</th>
+                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>{t('live.sprayCol', 'SPRAY ADVISORY')}</th>
+                <th style={{ padding: '12px', color: s.textMuted, fontWeight: '600', fontSize: '11px', letterSpacing: '0.5px' }}>{t('live.actionCol', 'ACTION')}</th>
               </tr>
             </thead>
             <tbody>

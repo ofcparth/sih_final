@@ -7,6 +7,7 @@ import { WEATHER_CURRENT, WEATHER_FORECAST, SENSOR_READINGS } from '../data/mock
 import { useFieldMapStore } from '../store/fieldMapStore';
 import { AI_RECOMMENDATIONS } from '../data/aiRecommendations';
 import AIRecommendationPanel from './AIRecommendationPanel';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const StatusBadge = ({ type, children }) => (
   <span className={`status-badge ${type}`}>
@@ -16,34 +17,54 @@ const StatusBadge = ({ type, children }) => (
 );
 
 export default function WeatherTab() {
+  const { t, currentLanguage } = useLanguage();
   const location = useFieldMapStore(state => state.location);
   const w = WEATHER_CURRENT;
   const s = SENSOR_READINGS;
 
+  const localeMap = {
+    hi: 'hi-IN',
+    mr: 'mr-IN',
+    gu: 'gu-IN',
+    te: 'te-IN',
+    ta: 'ta-IN',
+    kn: 'kn-IN',
+    pa: 'pa-IN',
+    bn: 'bn-IN',
+    en: 'en-IN'
+  };
+  const activeLocale = localeMap[currentLanguage] || 'en-IN';
+  const formattedDate = new Date().toLocaleDateString(activeLocale, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
   const risks = [
     {
       type: w.temp > 35 ? 'critical' : w.temp > 30 ? 'warning' : 'healthy',
-      title: 'Heat Stress Risk',
-      value: w.temp > 35 ? 'High' : w.temp > 30 ? 'Moderate' : 'Low',
-      desc: `Current temp ${w.temp}°C. Cotton boll development sensitive above 35°C.`,
+      title: t('weather.heatStressRisk', 'Heat Stress Risk'),
+      value: w.temp > 35 ? t('common.high', 'High') : w.temp > 30 ? t('common.moderate', 'Moderate') : t('common.low', 'Low'),
+      desc: `${t('weather.heatStressDesc', 'Development sensitive above 35°C.')} (${w.temp}°C)`,
     },
     {
       type: w.humidity > 80 ? 'warning' : 'healthy',
-      title: 'Fungal Disease Risk',
-      value: w.humidity > 80 ? 'Elevated' : 'Low',
-      desc: `Humidity ${w.humidity}%. Leaf wetness ${s.leafWetness}h. Monitor for secondary fungal infections.`,
+      title: t('weather.fungalDiseaseRisk', 'Fungal Disease Risk'),
+      value: w.humidity > 80 ? t('common.elevated', 'Elevated') : t('common.low', 'Low'),
+      desc: `${t('weather.fungalDiseaseDesc', 'High relative humidity favors spore germination and secondary fungal pathogens.')} (${w.humidity}%)`,
     },
     {
       type: s.rainfall7d < 10 ? 'warning' : 'healthy',
-      title: 'Drought Stress',
-      value: s.rainfall7d < 10 ? 'Moderate' : 'Low',
-      desc: `7-day rainfall: ${s.rainfall7d} mm. Soil moisture at ${s.soilMoisture}%.`,
+      title: t('weather.droughtStress', 'Drought Stress'),
+      value: s.rainfall7d < 10 ? t('common.moderate', 'Moderate') : t('common.low', 'Low'),
+      desc: `${t('weather.droughtStressDesc', 'Soil moisture is approaching lower threshold. Monitor roots.')} (7d: ${s.rainfall7d} mm)`,
     },
     {
       type: w.windSpeed > 30 ? 'warning' : 'healthy',
-      title: 'Spray Conditions',
-      value: w.windSpeed < 15 ? 'Favorable' : 'Marginal',
-      desc: `Wind ${w.windSpeed} km/h. ${w.windDir} direction. Optimal spraying: <15 km/h.`,
+      title: t('weather.sprayConditions', 'Spray Conditions'),
+      value: w.windSpeed < 15 ? t('common.favorable', 'Favorable') : t('common.marginal', 'Marginal'),
+      desc: `${t('weather.sprayConditionsDesc', 'Optimal foliar spraying requires wind speed below 15 km/h.')} (${w.windSpeed} km/h)`,
     },
   ];
 
@@ -52,9 +73,11 @@ export default function WeatherTab() {
       <div className="page-header">
         <h1 className="page-title">
           <CloudSun size={22} style={{ display: 'inline', marginRight: 8, color: 'var(--teal-500)' }} />
-          Weather &amp; Environmental Risk
+          {t('weather.title', 'Weather & Environmental Risk')}
         </h1>
-        <p className="page-subtitle">Real-time weather data and crop risk assessment for {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        <p className="page-subtitle">
+          {t('weather.subtitle', 'Real-time weather data and crop risk assessment')} · {formattedDate}
+        </p>
       </div>
 
       {/* Current Weather */}
@@ -62,9 +85,9 @@ export default function WeatherTab() {
         <div className="module-panel-header">
           <div className="module-panel-title">
             <CloudSun size={16} style={{ color: 'var(--teal-500)' }} />
-            Current Conditions — {location.name || 'Selected Field Location'}
+            {t('weather.currentConditions', 'Current Conditions')} — {location.name || 'Selected Field Location'}
           </div>
-          <StatusBadge type="info">Live</StatusBadge>
+          <StatusBadge type="info">{t('brand.live', 'Live')}</StatusBadge>
         </div>
         <div className="module-panel-body">
           <div className="weather-row">
@@ -75,17 +98,19 @@ export default function WeatherTab() {
                 <div>
                   <div className="weather-temp-big">{w.temp}°</div>
                   <div className="weather-desc">{w.description}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 2 }}>Feels like {w.feelsLike}°C</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 2 }}>
+                    {t('weather.feelsLike', 'Feels like')} {w.feelsLike}°C
+                  </div>
                 </div>
               </div>
               <div className="weather-stats">
                 {[
-                  { icon: <Droplets size={14} />, label: 'Humidity', value: `${w.humidity}%` },
-                  { icon: <Wind size={14} />, label: 'Wind', value: `${w.windSpeed} km/h ${w.windDir}` },
-                  { icon: <Eye size={14} />, label: 'Visibility', value: `${w.visibility} km` },
-                  { icon: <Sun size={14} />, label: 'UV Index', value: `${w.uvIndex} (High)` },
-                  { icon: <Thermometer size={14} />, label: 'Dew Point', value: `${w.dewPoint}°C` },
-                  { icon: <CloudRain size={14} />, label: 'Rain (24h)', value: `${w.rainfall24h} mm` },
+                  { icon: <Droplets size={14} />, label: t('weather.humidity', 'Humidity'), value: `${w.humidity}%` },
+                  { icon: <Wind size={14} />, label: t('weather.wind', 'Wind'), value: `${w.windSpeed} km/h ${w.windDir}` },
+                  { icon: <Eye size={14} />, label: t('weather.visibility', 'Visibility'), value: `${w.visibility} km` },
+                  { icon: <Sun size={14} />, label: t('weather.uvIndex', 'UV Index'), value: `${w.uvIndex} (${t('common.high', 'High')})` },
+                  { icon: <Thermometer size={14} />, label: t('weather.dewPoint', 'Dew Point'), value: `${w.dewPoint}°C` },
+                  { icon: <CloudRain size={14} />, label: t('weather.rain24h', 'Rain (24h)'), value: `${w.rainfall24h} mm` },
                 ].map(item => (
                   <div key={item.label} className="weather-stat">
                     <span style={{ color: 'var(--text-faint)' }}>{item.icon}</span>
@@ -100,7 +125,7 @@ export default function WeatherTab() {
 
             {/* 5-day forecast */}
             <div className="weather-forecast" style={{ flex: 1 }}>
-              <div className="section-heading">5-Day Forecast</div>
+              <div className="section-heading">{t('weather.forecast5Day', '5-Day Forecast')}</div>
               {WEATHER_FORECAST.map(day => (
                 <div key={day.day} className="forecast-day">
                   <span className="forecast-day-name">{day.day}</span>
@@ -120,7 +145,7 @@ export default function WeatherTab() {
         <div className="module-panel-header">
           <div className="module-panel-title">
             <AlertTriangle size={16} style={{ color: 'var(--amber-500)' }} />
-            Crop Risk Assessment
+            {t('weather.cropRiskTitle', 'Crop Risk Assessment')}
           </div>
         </div>
         <div className="module-panel-body">
@@ -150,16 +175,16 @@ export default function WeatherTab() {
         <div className="module-panel-header">
           <div className="module-panel-title">
             <Info size={16} style={{ color: 'var(--blue-500)' }} />
-            Weather-Based Farm Advisory
+            {t('weather.farmAdvisoryTitle', 'Weather-Based Farm Advisory')}
           </div>
         </div>
         <div className="module-panel-body">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[
-              { icon: '🌧', title: 'Delay pesticide spraying until Sunday', desc: '70% rain probability on Saturday. Spraying before rain reduces efficacy significantly. Wait for dry conditions.' },
-              { icon: '💧', title: 'Irrigate Friday evening', desc: 'No significant rain until Saturday. Current soil moisture approaching lower threshold. Evening irrigation (less evaporation) recommended.' },
-              { icon: '🌡️', title: 'Monitor for heat stress', desc: 'Temperature forecast 30–31°C over next 5 days. Currently within safe range for Bt cotton boll development.' },
-              { icon: '🌿', title: 'Favorable spray window: Tuesday–Wednesday', desc: 'Clear skies, wind <15 km/h, humidity stable. Optimal for pesticide and fertilizer foliar application.' },
+              { icon: '🌧', title: t('weather.advisoryRain', 'Delay pesticide spraying until dry conditions return'), desc: '70% rain probability forecast. Spraying before rain reduces efficacy significantly.' },
+              { icon: '💧', title: t('weather.advisoryIrrigate', 'Irrigate during evening hours to minimize evapotranspiration'), desc: 'Current soil moisture approaching lower threshold. Evening irrigation minimizes loss.' },
+              { icon: '🌡️', title: t('weather.advisoryHeat', 'Monitor crop foliage for heat stress and canopy wilting'), desc: 'Optimal temperatures for canopy growth. Maintain adequate soil moisture.' },
+              { icon: '🌿', title: t('weather.advisoryFavorable', 'Favorable spray window available in upcoming clear days'), desc: 'Optimal conditions for pesticide and foliar nutrition application.' },
             ].map(item => (
               <div key={item.title} style={{ display: 'flex', gap: 12, padding: '12px 14px', background: 'var(--gray-50)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-lg)' }}>
                 <span style={{ fontSize: 22, flexShrink: 0 }}>{item.icon}</span>
@@ -172,6 +197,7 @@ export default function WeatherTab() {
           </div>
         </div>
       </div>
+
       {/* AI Recommendation Panel */}
       <AIRecommendationPanel recommendation={AI_RECOMMENDATIONS.weather} />
     </div>

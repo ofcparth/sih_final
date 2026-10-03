@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sparkles, ChevronDown, ChevronUp, CheckCircle2,
   AlertTriangle, AlertOctagon, Info, Package,
-  IndianRupee, Clock, Zap, ExternalLink,
+  IndianRupee, Clock, Zap, ExternalLink, Globe
 } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const priorityStyle = {
   critical: { bg: 'var(--red-50)', border: 'var(--red-200)', color: 'var(--red-700)', icon: <AlertOctagon size={14} /> },
@@ -12,20 +13,46 @@ const priorityStyle = {
 };
 
 /**
- * AIRecommendationPanel — reusable panel for per-module AI recommendations
- * Props:
- *   recommendation — object from AI_RECOMMENDATIONS[moduleKey]
- *   defaultOpen    — boolean, whether expanded by default
- *   compact        — boolean, show compact version without full product table
+ * AIRecommendationPanel — multilingual reusable panel for per-module AI recommendations
  */
 export default function AIRecommendationPanel({ recommendation, defaultOpen = true, compact = false }) {
+  const { t, currentLanguage, translateText } = useLanguage();
   const [open, setOpen] = useState(defaultOpen);
   const [activeSection, setActiveSection] = useState('actions');
+  const [translatedSummary, setTranslatedSummary] = useState('');
+  const [isTranslatingSummary, setIsTranslatingSummary] = useState(false);
   const rec = recommendation;
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!rec || !rec.aiSummary) return;
+
+    if (currentLanguage === 'en') {
+      setTranslatedSummary(rec.aiSummary);
+      return;
+    }
+
+    setIsTranslatingSummary(true);
+    translateText(rec.aiSummary, currentLanguage, 'en')
+      .then(res => {
+        if (isMounted) setTranslatedSummary(res);
+      })
+      .catch(() => {
+        if (isMounted) setTranslatedSummary(rec.aiSummary);
+      })
+      .finally(() => {
+        if (isMounted) setIsTranslatingSummary(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [rec?.aiSummary, currentLanguage, translateText]);
 
   if (!rec) return null;
 
   const totalCost = rec.costEstimate?.breakdown?.reduce((a, b) => a + b.cost, 0) || 0;
+  const displaySummary = translatedSummary || rec.aiSummary;
 
   return (
     <div style={{
@@ -51,10 +78,10 @@ export default function AIRecommendationPanel({ recommendation, defaultOpen = tr
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: 'white', letterSpacing: '-0.2px' }}>
-            AI Recommendations · {rec.module}
+            {t('ai.title', 'AI Recommendations')} · {rec.module}
           </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 1 }}>
-            {rec.actions.length} actions · {rec.products.length} products · Est. ₹{totalCost.toLocaleString('en-IN')}/acre
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 1 }}>
+            {rec.actions.length} {t('ai.actions', 'actions')} · {rec.products.length} {t('ai.products', 'products')} · {t('ai.estCost', 'Est. Cost')}: ₹{totalCost.toLocaleString('en-IN')}/{t('ai.perAcre', 'acre')}
           </div>
         </div>
         <div style={{ color: 'rgba(255,255,255,0.9)', flexShrink: 0 }}>
@@ -72,18 +99,26 @@ export default function AIRecommendationPanel({ recommendation, defaultOpen = tr
             display: 'flex', gap: 10,
           }}>
             <Sparkles size={16} style={{ color: 'var(--brand)', flexShrink: 0, marginTop: 2 }} />
-            <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.65, margin: 0 }}>
-              {rec.aiSummary}
-            </p>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.65, margin: 0 }}>
+                {displaySummary}
+              </p>
+              {currentLanguage !== 'en' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6, fontSize: '11px', color: 'var(--brand)', fontWeight: 600 }}>
+                  <Globe size={11} />
+                  <span>AI4Bharat IndicTrans2 Neural Translation</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Section Tabs */}
           {!compact && (
             <div className="pill-group" style={{ marginBottom: 16 }}>
               {[
-                { id: 'actions', label: `Actions (${rec.actions.length})` },
-                { id: 'products', label: `Products (${rec.products.length})` },
-                { id: 'cost', label: 'Cost Estimate' },
+                { id: 'actions', label: `${t('ai.actions', 'Actions')} (${rec.actions.length})` },
+                { id: 'products', label: `${t('ai.products', 'Products')} (${rec.products.length})` },
+                { id: 'cost', label: t('ai.estCost', 'Cost Estimate') },
               ].map(s => (
                 <button
                   key={s.id}
@@ -101,6 +136,7 @@ export default function AIRecommendationPanel({ recommendation, defaultOpen = tr
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: compact ? 0 : 4 }}>
               {(compact ? rec.actions.slice(0, 3) : rec.actions).map(action => {
                 const ps = priorityStyle[action.priority] || priorityStyle.info;
+                const priorityLabel = t(`common.${action.priority}`, action.priority.charAt(0).toUpperCase() + action.priority.slice(1));
                 return (
                   <div key={action.step} style={{
                     background: ps.bg, border: `1px solid ${ps.border}`,
@@ -120,7 +156,7 @@ export default function AIRecommendationPanel({ recommendation, defaultOpen = tr
                         <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>{action.action}</span>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
                           <span style={{ fontSize: 11, color: ps.color, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
-                            {ps.icon} {action.priority.charAt(0).toUpperCase() + action.priority.slice(1)}
+                            {ps.icon} {priorityLabel}
                           </span>
                           <span style={{ fontSize: 11, color: 'var(--text-faint)', display: 'flex', alignItems: 'center', gap: 3 }}>
                             <Clock size={10} /> {action.timing}
@@ -134,7 +170,7 @@ export default function AIRecommendationPanel({ recommendation, defaultOpen = tr
               })}
               {compact && rec.actions.length > 3 && (
                 <div style={{ fontSize: 12, color: 'var(--brand-text)', textAlign: 'center', padding: '6px', fontWeight: 600 }}>
-                  +{rec.actions.length - 3} more actions in Farm Report →
+                  +{rec.actions.length - 3} {t('ai.recommendations', 'more actions')}
                 </div>
               )}
             </div>
@@ -146,10 +182,10 @@ export default function AIRecommendationPanel({ recommendation, defaultOpen = tr
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Product</th>
+                    <th>{t('ai.products', 'Product')}</th>
                     <th>Brand</th>
-                    <th>Dosage</th>
-                    <th>Cost</th>
+                    <th>{t('ai.dosage', 'Dosage')}</th>
+                    <th>{t('common.status', 'Cost')}</th>
                     <th>Usage / Acre</th>
                   </tr>
                 </thead>
@@ -176,8 +212,8 @@ export default function AIRecommendationPanel({ recommendation, defaultOpen = tr
             <div>
               <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
                 {[
-                  { label: 'One-time Cost', value: `₹${rec.costEstimate.oneTime.toLocaleString('en-IN')}`, sub: 'per acre', color: 'var(--red-600)', bg: 'var(--red-50)', border: 'var(--red-200)' },
-                  { label: 'Monthly Recurring', value: `₹${rec.costEstimate.monthly.toLocaleString('en-IN')}`, sub: 'per acre/month', color: 'var(--amber-700)', bg: 'var(--amber-50)', border: 'var(--amber-200)' },
+                  { label: 'One-time Cost', value: `₹${rec.costEstimate.oneTime.toLocaleString('en-IN')}`, sub: `per ${t('ai.perAcre', 'acre')}`, color: 'var(--red-600)', bg: 'var(--red-50)', border: 'var(--red-200)' },
+                  { label: 'Monthly Recurring', value: `₹${rec.costEstimate.monthly.toLocaleString('en-IN')}`, sub: `per ${t('ai.perAcre', 'acre')}/month`, color: 'var(--amber-700)', bg: 'var(--amber-50)', border: 'var(--amber-200)' },
                   { label: 'Total (4.2 acres)', value: `₹${(rec.costEstimate.perAcre * 4.2).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`, sub: 'this treatment cycle', color: 'var(--brand-text)', bg: 'var(--green-50)', border: 'var(--green-200)' },
                 ].map(item => (
                   <div key={item.label} style={{

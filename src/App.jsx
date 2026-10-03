@@ -19,6 +19,8 @@ import FieldMapTab from './components/FieldMapTab';
 import { FARM_INFO, ALERTS, SENSOR_READINGS, WEATHER_CURRENT, DETECTION_HISTORY } from './data/mockData';
 import { useFieldMapStore } from './store/fieldMapStore';
 import { getLocalDetections, fetchAllDetections, isFirebaseConfigured } from './services/storageService';
+import LanguageSelector from './components/LanguageSelector';
+import { useLanguage } from './i18n/LanguageContext';
 
 const TABS = [
   { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,6 +38,7 @@ const TABS = [
 ];
 
 export default function App() {
+  const { t, currentLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -131,8 +134,8 @@ export default function App() {
               <Sprout size={20} />
             </div>
             <div>
-              <div className="brand-name">Kisan AI</div>
-              <div className="brand-tagline">Smart Farming Assistant</div>
+              <div className="brand-name">{t('brand.name', 'Kisan AI')}</div>
+              <div className="brand-tagline">{t('brand.tagline', 'Smart Farming Assistant')}</div>
             </div>
           </div>
 
@@ -150,14 +153,16 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-faint)' }}>
             <CalendarDays size={13} />
             <span style={{ display: 'none', whiteSpace: 'nowrap' }} className="hide-mobile">
-              {FARM_INFO.growthStage} · Day {FARM_INFO.daysAfterSowing}
+              {FARM_INFO.growthStage} · {t('brand.day', 'Day')} {FARM_INFO.daysAfterSowing}
             </span>
           </div>
 
           <div className="header-actions">
+            <LanguageSelector />
+
             <div className="connection-chip demo">
               <span className="status-dot demo" />
-              Demo Mode
+              {t('brand.demoMode', 'Demo Mode')}
             </div>
 
             <button className="icon-btn" title="Refresh data">
@@ -181,6 +186,7 @@ export default function App() {
         <div className="nav-tabs-inner">
           {TABS.map(tab => {
             const Icon = tab.icon;
+            const tabLabel = t(`nav.${tab.id}`, tab.label);
             return (
               <button
                 key={tab.id}
@@ -191,10 +197,10 @@ export default function App() {
                 id={`tab-${tab.id}`}
               >
                 <Icon size={15} className="nav-tab-icon" />
-                {tab.label}
+                {tabLabel}
                 {tab.badge && (
                   <span className={`nav-tab-badge ${tab.badgeType === 'warn' ? 'warn' : ''}`}>
-                    {tab.badge}
+                    {tab.badge === 'Live' ? t('brand.live', 'Live') : tab.badge}
                   </span>
                 )}
               </button>
