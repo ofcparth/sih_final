@@ -229,7 +229,7 @@ export default function App() {
         fontSize: '12px',
         color: 'var(--text-faint)',
       }}>
-        <span>Kisan AI · Smart Farming Assistant · SIH 2024</span>
+        <span>Kisan AI · Smart Farming Assistant · SIH 2026</span>
         <span>Last refreshed: {lastRefresh} · {FARM_INFO.location}</span>
       </footer>
     </div>
