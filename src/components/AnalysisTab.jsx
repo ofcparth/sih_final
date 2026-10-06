@@ -637,7 +637,7 @@ export default function AnalysisTab() {
             )}
 
             {/* Visualization Tabs */}
-            {result && activeTab === 'Original Leaf' && (
+            {result && activeTab === 'original' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.3s' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px', color: '#374151' }}>Original Input Image:</h3>
                 <div style={{ flex: 1, background: '#111827', borderRadius: '12px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
@@ -646,7 +646,7 @@ export default function AnalysisTab() {
               </div>
             )}
 
-            {result && activeTab === 'Leaf ROI (Box)' && (
+            {result && activeTab === 'roi' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.3s' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px', color: '#374151' }}>Region-of-Interest (ROI) Contour & Bounding Box:</h3>
                 <div style={{ flex: 1, background: '#111827', borderRadius: '12px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
@@ -659,7 +659,7 @@ export default function AnalysisTab() {
               </div>
             )}
 
-            {result && activeTab === 'Attention Heatmap' && (
+            {result && activeTab === 'heatmap' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.3s' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px', color: '#374151' }}>Attention Heatmap (Model Saliency / Focus Area):</h3>
                 <div style={{ flex: 1, background: '#111827', borderRadius: '12px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
